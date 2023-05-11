@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cx3d MajorVersion="1" MinorVersion="0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="cx3d.xsd">
+	<CalibCase3d id="cal0">
+		<name>C5-2040CS23-100</name>
+		<sensorSN>21313101</sensorSN>
+		<dateTime>17-Jun-2022</dateTime>
+		<creator>cx_3d</creator>
+		<description>Factory Calibration</description>
+		<target>0</target>
+		<sensorSize>2048 1088</sensorSize>
+		<fov>76 87 106 106 136 118</fov>
+		<roc>0 0 0 0</roc>
+		<intrinsic>
+			<model>65537</model>
+			<rangeOffset>0</rangeOffset>
+			<rangeScale>0.0625</rangeScale>
+			<rrH>1</rrH>
+			<rrV>1</rrV>
+			<sensorRoi>0 0 2048 1088</sensorRoi>
+			<sensorR>0 0 0</sensorR>
+			<pixelSize>0 0</pixelSize>
+			<f>0</f>
+			<cp>0 0</cp>
+			<L>
+				<rows>1</rows>
+				<cols>0</cols>
+				<dt>d</dt>
+				<data/>
+			</L>
+			<P>
+				<rows>3</rows>
+				<cols>3</cols>
+				<dt>d</dt>
+				<data>0.08952967223075288 0.0001790844817846591 -91.50317105593531 3.918221832593625e-05 0.2220828963753982 -118.7017220658942 -1.524463096605424e-06 0.001346242005931789 1</data>
+			</P>
+			<C>
+				<rows>15</rows>
+				<cols>2</cols>
+				<dt>d</dt>
+				<data>0.001118750225033811 0.006856244030340665 0.996080501159206 -0.001265602651975591 9.888275790450095e-05 0.9975040688921134 -1.611781129507083e-05 2.146802185570852e-05 5.722149352120102e-06 -4.958865212257451e-05 2.215783760665937e-06 -4.150522728560417e-05 -3.399276767505194e-07 2.520972514853361e-06 1.33356679457693e-06 9.970559043411298e-09 2.354683599603916e-06 5.707117790719869e-07 3.044811100995918e-07 6.478269948345663e-07 3.789684500909419e-08 1.038573210081395e-09 2.440266802357672e-09 3.820418607497893e-08 -6.484803096350625e-09 -2.898108001364079e-09 -4.809079661313477e-09 6.551560725677285e-09 -1.283562124103682e-08 3.033997949721058e-08</data>
+			</C>
+			<N>
+				<rows>1</rows>
+				<cols>0</cols>
+				<dt>d</dt>
+				<data/>
+			</N>
+		</intrinsic>
+		<extrinsic>
+			<Sy>0.049</Sy>
+			<Sxy>0</Sxy>
+			<Szy>0</Szy>
+			<T>0 0 0</T>
+			<R>0 0 0</R>
+		</extrinsic>
+		<metric>
+			<offset>0 0 0</offset>
+			<scale>1 1 1</scale>
+			<invalidDataValue>0</invalidDataValue>
+		</metric>
+		<accuracyStat>
+			<rows>4</rows>
+			<cols>3</cols>
+			<dt>d</dt>
+			<data>0 0 0 0 0 0 0 0 0 0 0 0</data>
+		</accuracyStat>
+		<lensCorrStat>
+			<rows>1</rows>
+			<cols>3</cols>
+			<dt>d</dt>
+			<data>0 0 0</data>
+		</lensCorrStat>
+	</CalibCase3d>
+</cx3d>

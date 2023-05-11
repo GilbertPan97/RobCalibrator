@@ -1,0 +1,5 @@
+add_subdirectory(MainWindowExample)
+
+add_subdirectory(QtPropertyBrowserExample)
+
+add_subdirectory(vtkViewerTest)

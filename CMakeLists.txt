@@ -1,17 +1,56 @@
-cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+﻿cmake_minimum_required(VERSION 3.5)
 
-project(vtk_point_display)
+# config project version
+set(SFRCALIB_VERSION_MAJOR 0)
+set(SFRCALIB_VERSION_MINOR 4)
+set(SFRCALIB_VERSION_PATCH 0)
+set(SFRCALIB_VERSION "${SFRCALIB_VERSION_MAJOR}.${SFRCALIB_VERSION_MINOR}.${SFRCALIB_VERSION_PATCH}")
+message(STATUS "SfrCalib version is: ${SFRCALIB_VERSION}")
 
-set(SFR_SDK_DIR "C:/SFR_SDK")
-find_package(VTK REQUIRED HINTS ${SFR_SDK_DIR})
+add_compile_options(/bigobj)    # add big obj option to avoid calibrator build fail
 
-include(${VTK_USE_FILE})
+# local dependent package
+set(THIRD_PARTY "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+project(SfrCalib VERSION ${SFRCALIB_VERSION} LANGUAGES CXX)
 
-if (NOT VTK_FOUND)
-  message("Skipping vtk_point_display: ${VTK_NOT_FOUND_MESSAGE}")
-  return ()
+option(BUILD_EXAMPLES "build the examples" ON)
+option(BUILD_DESIGNERPLUGIN "build the Designer Plugin" ON)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
+set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_RELWITHDEBINFO_POSTFIX "rd" CACHE STRING "add a postfix, usually empty on windows")
+set(CMAKE_MINSIZEREL_POSTFIX "s" CACHE STRING "add a postfix, usually empty on windows")
+
+if(MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4819")
 endif()
-message (STATUS "VTK_VERSION: ${VTK_VERSION}")
 
-add_executable(vtk_point_display vtk_point_display.cpp)
-target_link_libraries(vtk_point_display PRIVATE ${VTK_LIBRARIES})
+include(CPack)
+# platform check
+if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+    set(SFRCALIB_PLATFORM "86")
+else()
+    set(SFRCALIB_PLATFORM "64")
+endif()
+
+# add window platform resource config macro definition
+include(cmake/WinResource.cmake)
+
+# The bin file directory is one level above the current directory
+if((${CMAKE_BUILD_TYPE}) STREQUAL "Debug")
+    set(SFRCALIB_BUILD_TYPE debug)
+elseif((${CMAKE_BUILD_TYPE}) STREQUAL "Release")
+    set(SFRCALIB_BUILD_TYPE release)
+endif()
+
+set(SFRCALIB_BIN_NAME bin_${SFRCALIB_VERSION})
+set(SFRCALIB_BIN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/${SFRCALIB_BIN_NAME})
+
+add_subdirectory(src)
+add_subdirectory(cmake)
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(example)
+endif()

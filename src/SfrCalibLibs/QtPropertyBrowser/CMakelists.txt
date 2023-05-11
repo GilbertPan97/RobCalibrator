@@ -1,0 +1,78 @@
+
+set(SRC_FILES
+    qtbuttonpropertybrowser.cpp
+    qteditorfactory.cpp
+    qtgroupboxpropertybrowser.cpp
+    qtpropertybrowser.cpp
+    qtpropertybrowserutils.cpp
+    qtpropertymanager.cpp
+    qttreepropertybrowser.cpp
+    qtvariantproperty.cpp
+)
+
+set(HEADER_FILES
+    qtbuttonpropertybrowser.h
+    qteditorfactory.h
+    qtgroupboxpropertybrowser.h
+    qtpropertybrowser.h
+    qtpropertybrowserutils_p.h
+    qtpropertymanager.h
+    qttreepropertybrowser.h
+    qtvariantproperty.h
+)
+
+set(QRC_FILES qtpropertybrowser.qrc)
+
+source_group("Header Files" FILES ${HEADER_FILES})
+source_group("Source Files" FILES ${SRC_FILES})
+source_group("Resource Files" FILES ${QRC_FILES})
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+add_library(QtPropertyBrowser ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
+
+# find qt package: for all component
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
+
+target_include_directories(QtPropertyBrowser PUBLIC
+    ${PROJECT_BINARY_DIR}
+    ${Qt5Core_INCLUDE_DIRS}
+    ${Qt5Gui_INCLUDE_DIRS}
+    ${Qt5Widgets_INCLUDE_DIRS}
+)
+
+target_link_libraries(QtPropertyBrowser PUBLIC
+    ${Qt5Core_LIBRARIES}
+    ${Qt5Gui_LIBRARIES}
+    ${Qt5Widgets_LIBRARIES}
+)
+
+include(GenerateExportHeader)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+generate_export_header(QtPropertyBrowser)
+configure_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/qtpropertybrowser_export.h"
+    "${CMAKE_BINARY_DIR}/qtpropertybrowser_export.h"
+    COPYONLY
+)
+
+set_target_properties(QtPropertyBrowser PROPERTIES 
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
+    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
+    EXPORT_NAME QtPropertyBrowser
+    ARCHIVE_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
+)
+
+install(TARGETS QtPropertyBrowser
+  RUNTIME DESTINATION ${INSTALL_DIR}/bin/$<CONFIG>/QtPropertyBrowser
+  LIBRARY DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtPropertyBrowser
+  ARCHIVE DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtPropertyBrowser
+)
+
+install(FILES ${HEADER_FILES}
+        DESTINATION ${INSTALL_DIR}/include/QtPropertyBrowser)
