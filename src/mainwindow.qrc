@@ -72,6 +72,11 @@
 		<file>icon/display.svg</file>
 		<file>icon/algorithms.svg</file>
 		<file>icon/RobHand.svg</file>
+        <file>icon/photo.svg</file>
+        <file>icon/color_lens.svg</file>
+        <file>icon/date_range.svg</file>
+        <file>icon/folder.svg</file>
+		<file>icon/type.svg</file>
     </qresource>
     <qresource prefix="/gallery-icon">
         <file>icon/gallery/Document-File.svg</file>

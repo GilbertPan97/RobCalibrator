@@ -17,6 +17,9 @@ class SARibbonQuickAccessBar;
 class SARibbonButtonGroupWidget;
 class QTextEdit;
 class QVTKOpenGLNativeWidget;
+class CImageViewer;
+class QListWidgetItem;
+class QListWidget;
 
 class MainWindow : public SARibbonMainWindow
 {
@@ -26,7 +29,9 @@ public:
 
 private:
     ads::CDockWidget* createQtVTKviewerDockWidget();
+    ads::CDockWidget* createQtImgviewerDockWidget();
     ads::CDockWidget* createPropertyBrowser();
+    ads::CDockWidget* createDataBrowserDockWidget();
     void createCategoryCalib(SARibbonCategory* page);
     void createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar);
     void createRightButtonGroup(SARibbonButtonGroupWidget* rightBar);
@@ -36,17 +41,17 @@ private:
 
     bool view3DLoadYML(std::string img_path);
 
+signals:
+    void signalUpdateBrowser();
+
 private slots:
     bool onCalibTriggered();
     void onNewSectionTriggered();
+    void onCalibToolTriggered();
     void onActionCustomizeAndSaveTriggered(bool b);
     void onActionHelpTriggered();
     void onActionRemoveAppBtnTriggered(bool b);
-
-    // void onStyleClicked(int id);
-    // void onActionUseQssTriggered();
-    // void onActionLoadCustomizeXmlFileTriggered();
-    // void onActionWindowFlagNormalButtonTriggered(bool b);
+    void showScanData(QListWidgetItem* item);
 
 private:
     SARibbonContextCategory* m_contextCategory;
@@ -54,6 +59,8 @@ private:
     SARibbonCustomizeWidget* m_customizeWidget;
     QTextEdit* m_edit;
     thQVTKOpenGLNativeWidget* m_viewer3d;
+    CImageViewer* m_viewer2d;
+    QListWidget* m_dataBrowser;
     nlohmann::json m_section;
     SARibbonActionsManager* m_actMgr;
     int m_actionTagText;

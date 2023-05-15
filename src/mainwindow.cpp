@@ -27,6 +27,7 @@
 #include <qttreepropertybrowser.h>
 #include <qtbuttonpropertybrowser.h>
 #include <qtgroupboxpropertybrowser.h>
+#include "ImageViewer.h"
 
 #include <QVTKOpenGLNativeWidget.h>     // QVTK... is vtk GUI support
 #include <vtkRenderer.h>
@@ -52,6 +53,10 @@
 #include <QFile>
 #include <QThread>
 #include <QTextEdit>
+#include <QToolBar>
+#include <QTreeView>
+#include <QListWidget>
+#include <QFileSystemModel>
 #include <QTextBrowser>
 #include <QAbstractButton>
 #include <QFileDialog>
@@ -61,6 +66,7 @@
 #include <QMessageBox>
 #include <QAction>
 #include <QMenu>
+#include <QDateTime>
 #include <QStatusBar>
 #include <QDebug>
 #include <QElapsedTimer>
@@ -78,6 +84,15 @@
 #include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
+
+static QIcon svgIcon(const QString& File)
+{
+	// This is a workaround, because in item views SVG icons are not
+	// properly scaled and look blurry or pixelate
+	QIcon SvgIcon(File);
+	SvgIcon.addPixmap(SvgIcon.pixmap(92));
+	return SvgIcon;
+}
 
 MainWindow::MainWindow(QWidget* par) : SARibbonMainWindow(par), m_customizeWidget(nullptr)
 {
@@ -105,12 +120,20 @@ MainWindow::MainWindow(QWidget* par) : SARibbonMainWindow(par), m_customizeWidge
     createCategoryCalib(cat_3dScanner);
     ribbon->addCategoryPage(cat_3dScanner);
 
-    // add vtk viewer (3D display)
+    // add 2D & 3D viewer, and QtPropertyBrowser
     ads::CDockManager* DockManager = new ads::CDockManager(this);
     auto DockWidget1 = createQtVTKviewerDockWidget();
-    auto DockWidget2 = createPropertyBrowser();
-    DockManager->addDockWidget(ads::CenterDockWidgetArea, DockWidget1);
-    DockManager->addDockWidget(ads::RightDockWidgetArea, DockWidget2);
+    auto DockWidget2 = createQtImgviewerDockWidget();
+    auto DockWidget4 = createDataBrowserDockWidget();    // DataBrowser should build before PropertyBrowser
+    auto DockWidget3 = createPropertyBrowser();
+
+    auto TopDockArea = DockManager->addDockWidget(ads::TopDockWidgetArea, DockWidget2);
+
+    auto ViewerDockArea = DockManager->addDockWidget(ads::CenterDockWidgetArea, DockWidget1, TopDockArea);
+    
+    auto CenterDockArea = DockManager->addDockWidget(ads::BottomDockWidgetArea, DockWidget4, ViewerDockArea);
+    DockManager->addDockWidget(ads::RightDockWidgetArea, DockWidget3);
+    
     this->setCentralWidget(DockManager);
 
     setMinimumWidth(1200);
@@ -126,7 +149,21 @@ ads::CDockWidget* MainWindow::createQtVTKviewerDockWidget()
     ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("3D Viewer"));
     m_viewer3d = new thQVTKOpenGLNativeWidget();
     DockWidget->setWidget(m_viewer3d);
+    DockWidget->setIcon(svgIcon(":/icon/icon/color_lens.svg"));
     DockWidget->setToggleViewActionMode(ads::CDockWidget::ActionModeShow);
+
+    return DockWidget;
+}
+
+ads::CDockWidget* MainWindow::createQtImgviewerDockWidget()
+{
+    ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("2D Viewer"));
+    m_viewer2d = new CImageViewer();
+    DockWidget->setWidget(m_viewer2d, ads::CDockWidget::ForceNoScrollArea);
+    DockWidget->setIcon(svgIcon(":/icon/icon/photo.svg"));
+    auto ToolBar = DockWidget->createDefaultToolBar();
+    ToolBar->addActions(m_viewer2d->actions());
+    m_viewer2d->loadFile("./RobHand.jpeg");
 
     return DockWidget;
 }
@@ -137,94 +174,140 @@ ads::CDockWidget* MainWindow::createPropertyBrowser()
     
     QWidget* w = new QWidget();
 
-    // construct property browser items
-    QtBoolPropertyManager *boolManager = new QtBoolPropertyManager(w);
-    QtIntPropertyManager *intManager = new QtIntPropertyManager(w);
-    QtStringPropertyManager *stringManager = new QtStringPropertyManager(w);
-    QtSizePropertyManager *sizeManager = new QtSizePropertyManager(w);
-    QtRectPropertyManager *rectManager = new QtRectPropertyManager(w);
-    QtSizePolicyPropertyManager *sizePolicyManager = new QtSizePolicyPropertyManager(w);
-    QtEnumPropertyManager *enumManager = new QtEnumPropertyManager(w);
-    QtGroupPropertyManager *groupManager = new QtGroupPropertyManager(w);
+    // BUG: createPropertyBrowser before should createDataBrowserDockWidget
+    QtStringPropertyManager* fileName = new QtStringPropertyManager(w);
+    QtPathPropertyManager* filePath = new QtPathPropertyManager(w);
+    QtStringPropertyManager* objName = new QtStringPropertyManager(w);
+    QtIntPropertyManager* pntsNumber = new QtIntPropertyManager(w);
+    QtGroupPropertyManager* filter = new QtGroupPropertyManager(w);
+    QtBoolPropertyManager* filterEnable = new QtBoolPropertyManager(w);
+    QtEnumPropertyManager* filterAlgor = new QtEnumPropertyManager(w);
+    QtEnumPropertyManager* color = new QtEnumPropertyManager(w);
 
-    QtProperty *item0 = groupManager->addProperty("Calibration Data");
+    QtProperty* item0 = fileName->addProperty("File Name");
+    QtProperty* item1 = filePath->addProperty("Path");
+    QtProperty* item2 = objName->addProperty("Objection");
+    QtProperty* item3 = pntsNumber->addProperty("Points Number");
+    QtProperty* item4 = filter->addProperty("Filter");
+    QtProperty* item5 = filterEnable->addProperty("Filter Enable");
+    QtProperty* item6 = filterAlgor->addProperty("Method");
+    QtProperty* item7 = color->addProperty("Color");
 
-    QtProperty *item1 = stringManager->addProperty("Object Name");
-    item0->addSubProperty(item1);
+    item4->addSubProperty(item5);
+    item4->addSubProperty(item6);
 
-    QtProperty *item2 = boolManager->addProperty("enabled");
-    item0->addSubProperty(item2);
+    QtAbstractPropertyBrowser *editor = new QtTreePropertyBrowser(w);
+    editor->addProperty(item0);
+    editor->addProperty(item1);
+    editor->addProperty(item2);
+    editor->addProperty(item3);
+    editor->addProperty(item4);
+    editor->addProperty(item7);
 
-    QtProperty *item3 = rectManager->addProperty("geometry");
-    item0->addSubProperty(item3);
+    // connect data browser and property browser
+    connect(m_dataBrowser, &QListWidget::itemActivated, this, [=](QListWidgetItem* item){
+        QString file_name = item->text();
+        fileName->setValue(item0, file_name);
 
-    QtProperty *item4 = sizePolicyManager->addProperty("sizePolicy");
-    item0->addSubProperty(item4);
+        auto ImgSaveDir = m_section["ImagesDir"];
+        QString ImgPath = QString::fromStdString(ImgSaveDir) + "/" + file_name;
+        filePath->setValue(item1, ImgPath);
 
-    QtProperty *item5 = sizeManager->addProperty("sizeIncrement");
-    item0->addSubProperty(item5);
+        objName->setValue(item2, "Sphere");
 
-    QtProperty *item7 = boolManager->addProperty("mouseTracking");
-    item0->addSubProperty(item7);
+        std::vector<cv::Point3f> scan_line;
+		cv::FileStorage fs(ImgPath.toStdString(), cv::FileStorage::READ);
+		fs["scan_line"] >> scan_line;
+		fs.release();
 
-    QtAbstractPropertyBrowser *editor2 = new QtTreePropertyBrowser(w);
-    editor2->addProperty(item0);
-
-    // set last and next button
-    static int id_yml = 0;
-    QPushButton* last_btn = new QPushButton("Last One");
-    connect(last_btn, &QPushButton::released, this, [this](){
-        // check section
-        if(m_section.empty())
-            return;
-        
-        if(id_yml != 0)     id_yml -= 1;
-        std::string ImgSaveDir = m_section["ImagesDir"];
-        std::string ImgPath = ImgSaveDir + "/" + std::to_string(id_yml + 1) + "_3C_line.yml";
-        
-        // point cloud display
-        view3DLoadYML(ImgPath);
+        pntsNumber->setValue(item3, scan_line.size());
     });
-
-    QPushButton* next_btn = new QPushButton("Next One");
-    connect(next_btn, &QPushButton::released, this, [this](){
-        // check section
-        if(m_section.empty())
-            return;
-        
-        if(id_yml != 9)     id_yml += 1;
-        std::string ImgSaveDir = m_section["ImagesDir"];
-        std::string ImgPath = ImgSaveDir + "/" + std::to_string(id_yml + 1) + "_3C_line.yml";
-        
-        // point cloud display
-        view3DLoadYML(ImgPath);
-    });
-
-    QHBoxLayout* h_layout = new QHBoxLayout();
-    h_layout->addWidget(last_btn);
-    h_layout->addWidget(next_btn);
 
     // build layout to DockWidget
     QVBoxLayout* v_layout = new QVBoxLayout(w);
 
     // add widget to layout
-    v_layout->addLayout(h_layout);
-    v_layout->addWidget(editor2, 1);
+    v_layout->addWidget(editor, 1);
 
     DockWidget->setWidget(w);
+    DockWidget->setIcon(svgIcon(":/icon/icon/date_range.svg"));
     DockWidget->setToggleViewActionMode(ads::CDockWidget::ActionModeShow);
+
+    return DockWidget;
+}
+
+/**
+ * Creates a dock widget with a file system tree view
+ */
+ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
+{
+    m_dataBrowser = new QListWidget();
+    m_dataBrowser->setViewMode(QListView::IconMode);
+    m_dataBrowser->setGridSize(QSize(180,200));
+    m_dataBrowser->setIconSize(QSize(156,156));
+    m_dataBrowser->setResizeMode(QListWidget::Adjust);
+    m_dataBrowser->setStyleSheet("QListWidget::item:hover{background-color:rgba(208,206,206,255);border-radius:8px; }"
+                                 "QListWidget::item:selected{background-color:rgba(208,206,206,255);border-radius:8px; }"
+                                 "QScrollBar:horizontal{width:6px}");
+    // m_dataBrowser->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+
+    ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("Data Browser"));
+    DockWidget->setWidget(m_dataBrowser);
+    DockWidget->setIcon(svgIcon(":/icon/icon/folder.svg"));
+    // We disable focus to test focus highlighting if the dock widget content
+    // does not support focus
+    m_dataBrowser->setFocusPolicy(Qt::NoFocus);
+    
+    // read files from image directory
+    connect(this, &MainWindow::signalUpdateBrowser, this, [this](){
+        // check m_section
+        if(m_section["ImagesDir"].empty()){
+            std::cout << "ERROR: Images directory is empty.\n";
+            return;
+        }
+
+        // set filter extension
+        QString folderPath = QString::fromStdString(m_section["ImagesDir"]);
+        QString fileExtension = "*.yml";
+
+        QDir folder(folderPath);
+        if (!folder.exists()) {
+            std::cout << "ERROR: The folder is not exist!\n";
+            return;
+        }
+
+        // only yml files can be browser display
+        QStringList nameFilters;
+        nameFilters << fileExtension;
+        folder.setNameFilters(nameFilters);
+        QStringList files = folder.entryList(QDir::Files | QDir::NoDotAndDotDot);
+        files.sort();
+
+        // clear listWidget and reset data browser
+        m_dataBrowser->clear();
+        for(int i = 0; i < files.count(); i++){
+            QListWidgetItem* item = new QListWidgetItem();
+            item->setIcon(QIcon(":/icon/icon/photo.svg"));
+            item->setText(files[i]);
+            m_dataBrowser->addItem(item);
+        }
+
+        connect(m_dataBrowser, &QListWidget::itemActivated, this, &MainWindow::showScanData);
+    });
+    
 
     return DockWidget;
 }
 
 void MainWindow::createCategoryCalib(SARibbonCategory* page)
 {
+    SARibbonPannel* pannel_section = new SARibbonPannel(("Project Section"));
     SARibbonPannel* pannel_data = new SARibbonPannel(("Calibration Data"));
     SARibbonPannel* pannel_mode = new SARibbonPannel(("Mode Settings"));
     SARibbonPannel* pannel_calib = new SARibbonPannel(("Calibration"));
     SARibbonPannel* pannel_result = new SARibbonPannel(("Result"));
 
-    /* calib data */
+    /* calibration section */
     static QString section_path;
     QAction* actNewSection = createAction(tr("New Section"), ":/icon/icon/new.svg");
     connect(actNewSection, &QAction::triggered, this, &MainWindow::onNewSectionTriggered);
@@ -244,11 +327,18 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
             js_file_in.close();
         }
 
+        emit signalUpdateBrowser();
+
         section_path = section_path_in;
     });
 
     QAction* actSaveSection = createAction(tr("Save Section"), ":/icon/icon/save1.svg");
     connect(actSaveSection, &QAction::triggered, this, [this](){
+        // get save data and add to section
+        QDateTime currentDateTime = QDateTime::currentDateTime();
+        QString currentTimeString = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
+        m_section["SaveTime"] = currentTimeString.toStdString();
+
         if(section_path.isEmpty())
             section_path = QFileDialog::getSaveFileName(
                 this, 
@@ -260,8 +350,12 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
 		json_file_out << std::setw(4) << m_section << std::endl;
 		json_file_out.close();
     });
+    pannel_section->addLargeAction(actNewSection);
+    pannel_section->addLargeAction(actOpenSection);
+    pannel_section->addLargeAction(actSaveSection);
 
-    QAction* actCollect = createAction(tr("Collection"), ":/icon/icon/camera.svg");
+    /* calibration data */
+    QAction* actCollect = createAction(tr("Auto Collection"), ":/icon/icon/camera.svg");
 
     QAction* actSetImgs = createAction(tr("Set Images"), ":/icon/icon/images.svg");
     connect(actSetImgs, &QAction::triggered, this, [this](){
@@ -285,29 +379,47 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
         m_section["RobPosesFile"] = rob_pose_path.toStdString();
     });
 
-    pannel_data->addLargeAction(actNewSection);
-    pannel_data->addLargeAction(actOpenSection);
-    pannel_data->addLargeAction(actSaveSection);
     pannel_data->addLargeAction(actCollect);
     pannel_data->addLargeAction(actSetImgs);
     pannel_data->addLargeAction(actSetRobs);
 
-    /* calib mode */
-    QRadioButton* radio_eih = new QRadioButton("Eye In Hand");
-    QRadioButton* radio_eth = new QRadioButton("Eye To Hand");
-    QButtonGroup* radio_mode = new QButtonGroup();
-    radio_mode->addButton(radio_eih);
-    radio_mode->addButton(radio_eth);
-    radio_mode->setExclusive(true);
+    /* calibration mode */
+    QAction *actType = createAction(tr("Calibrate Type"), ":/icon/icon/type.svg");
+    QMenu *optionsType = new QMenu();
+    actType->setMenu(optionsType);
+    QActionGroup *optionGroup = new QActionGroup(actType);
+    QAction *option_EIH = new QAction("Eye In Hand", optionGroup);
+    QAction *option_ETH = new QAction("Eye To Hand", optionGroup);
+    
+    option_EIH->setCheckable(true);
+    option_ETH->setCheckable(true);
+    optionsType->addAction(option_EIH);
+    optionsType->addAction(option_ETH);
+    connect(option_EIH, &QAction::triggered, this, [this](){ m_section["CalibType"] = "EyeInHand";});
+    connect(option_ETH, &QAction::triggered, this, [this](){ m_section["CalibType"] = "EyeToHand";});
 
     QAction* actTool = createAction(tr("Calibrate Tools"), ":/icon/icon/tools.svg");
+    connect(actTool, &QAction::triggered, this, &MainWindow::onCalibToolTriggered);
+
     QAction* actAlgors = createAction(tr("Algorithms"), ":/icon/icon/algorithms.svg");
-    pannel_mode->addMediumWidget(radio_eih);
-    pannel_mode->addMediumWidget(radio_eth);
+    QMenu *optionsAlgor = new QMenu();
+    actAlgors->setMenu(optionsAlgor);
+    QActionGroup *optionGroup1 = new QActionGroup(actAlgors);
+    QAction *option_Regr = new QAction("Regression", optionGroup1);
+    QAction *option_Iter = new QAction("Iterative", optionGroup1);
+
+    option_Regr->setCheckable(true);
+    option_Iter->setCheckable(true);
+    optionsAlgor->addAction(option_Regr);
+    optionsAlgor->addAction(option_Iter);
+    connect(option_Regr, &QAction::triggered, this, [this](){ m_section["CalibAlgor"] = "Regression";});
+    connect(option_Iter, &QAction::triggered, this, [this](){ m_section["CalibAlgor"] = "Iterative";});
+
+    pannel_mode->addLargeAction(actType);
     pannel_mode->addLargeAction(actTool);
     pannel_mode->addLargeAction(actAlgors);
 
-    /* calib run */
+    /* calibration run */
     QAction* actCalib = createAction(tr("Calibration"), ":/icon/icon/calibration.svg");
     pannel_calib->addLargeAction(actCalib);
 
@@ -319,6 +431,7 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     pannel_result->addLargeAction(actExport);
     pannel_result->addLargeAction(actDisp);
 
+    page->addPannel(pannel_section);
     page->addPannel(pannel_data);
     page->addPannel(pannel_mode);
     page->addPannel(pannel_calib);
@@ -484,7 +597,6 @@ void MainWindow::onNewSectionTriggered()
     sec_browser->setFactoryForManager(sphereRadiusManager, sphereRadiusFactory);
     item0->addSubProperty(item2);
 
-
     // QtSpinBoxFactory *calibObjFactory = new QtSpinBoxFactory(sec_browser);
     // sec_browser->setFactoryForManager(calibObjManager->subIntPropertyManager(), calibObjFactory);
     sec_browser->addProperty(item0);
@@ -495,6 +607,37 @@ void MainWindow::onNewSectionTriggered()
     layout->addWidget(sec_browser);
     layout->addWidget(setbtn);
 
+    w->setLayout(layout);
+    w->resize(800, 400);
+    w->show();
+    QApplication::processEvents();
+}
+
+void MainWindow::onCalibToolTriggered()
+{
+    QWidget* w = new QWidget();
+    QtTreePropertyBrowser* tool_browser = new QtTreePropertyBrowser();
+
+    QtEnumPropertyManager* toolName = new QtEnumPropertyManager(tool_browser);
+    QtEnumEditorFactory* toolNameFactory = new QtEnumEditorFactory(toolName);
+    QtProperty* item0 = toolName->addProperty("Tool Name");
+    toolName->setEnumNames(item0, QStringList() << "Sphere");
+    tool_browser->setFactoryForManager(toolName, toolNameFactory);
+    tool_browser->addProperty(item0);
+
+    QtIntPropertyManager* sphereRadius = new QtIntPropertyManager(tool_browser);
+    QtSpinBoxFactory* sphereRadiusFactory = new QtSpinBoxFactory(tool_browser);
+    QtProperty* item1 = sphereRadius->addProperty("Sphere Radius");
+    sphereRadius->setRange(item1, 0, 100);
+    tool_browser->setFactoryForManager(sphereRadius, sphereRadiusFactory);
+    tool_browser->addProperty(item1);
+
+    QVBoxLayout* layout = new QVBoxLayout();
+    QPushButton* setbtn = new QPushButton("OK");
+    connect(setbtn, &QPushButton::released, this, [w](){ delete w; });
+    
+    layout->addWidget(tool_browser);
+    layout->addWidget(setbtn);
     w->setLayout(layout);
     w->resize(800, 400);
     w->show();
@@ -556,6 +699,14 @@ void MainWindow::onActionRemoveAppBtnTriggered(bool b)
         actionRemoveAppBtn->setText(tr("File"));
         this->ribbonBar()->setApplicationButton(actionRemoveAppBtn);
     }
+}
+
+void MainWindow::showScanData(QListWidgetItem* item)
+{
+    QString qstr = item->text();
+    std::string ImgSaveDir = m_section["ImagesDir"];
+    std::string ImgPath = ImgSaveDir + "/" + qstr.toUtf8().constData();
+    view3DLoadYML(ImgPath);
 }
 
 void MainWindow::createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar)

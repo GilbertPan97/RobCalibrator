@@ -153,18 +153,18 @@ void CImageViewer::createActions()
 {
 	QAction* a;
     a = new QAction(tr("&Open..."));
-    a->setIcon(QIcon(":/adsdemo/images/perm_media.svg"));
+    a->setIcon(QIcon(":/QtImgViewer/icons/perm_media.svg"));
     connect(a, &QAction::triggered, this, &CImageViewer::open);
     a->setShortcut(QKeySequence::Open);;
     this->addAction(a);
 
 	a = new QAction(tr("Fit on Screen"));
-	a->setIcon(QIcon(":/adsdemo/images/zoom_out_map.svg"));
+	a->setIcon(QIcon(":/QtImgViewer/icons/zoom_out_map.svg"));
 	connect(a, &QAction::triggered, this, &CImageViewer::fitToWindow);
 	this->addAction(a);
 
 	a = new QAction(tr("Actual Pixels"));
-	a->setIcon(QIcon(":/adsdemo/images/find_in_page.svg"));
+	a->setIcon(QIcon(":/QtImgViewer/icons/find_in_page.svg"));
 	connect(a, &QAction::triggered, this, &CImageViewer::normalSize);
 	this->addAction(a);
 
@@ -173,12 +173,12 @@ void CImageViewer::createActions()
 	this->addAction(a);
 
 	a = new QAction(tr("Zoom In (25%)"));
-	a->setIcon(QIcon(":/adsdemo/images/zoom_in.svg"));
+	a->setIcon(QIcon(":/QtImgViewer/icons/zoom_in.svg"));
 	connect(a, &QAction::triggered, this, &CImageViewer::zoomIn);
 	this->addAction(a);
 
 	a = new QAction(tr("Zoom Out (25%)"));
-	a->setIcon(QIcon(":/adsdemo/images/zoom_out.svg"));
+	a->setIcon(QIcon(":/QtImgViewer/icons/zoom_out.svg"));
 	connect(a, &QAction::triggered, this, &CImageViewer::zoomOut);
 	this->addAction(a);
 

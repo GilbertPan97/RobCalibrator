@@ -12,7 +12,7 @@ source_group("Header Files" FILES ${HEADER_FILES})
 source_group("Source Files" FILES ${SRC_FILES})
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-add_library(QtVTKviewer ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
+add_library(QtVTKviewer ${HEADER_FILES} ${SRC_FILES})
 
 # find qt package: for all component
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
@@ -29,7 +29,7 @@ message(STATUS "VTK package dir is: ${VTK_DIR}")
 # find opencv package: used for QtVTKviewer
 find_package(OpenCV REQUIRED HINTS ${THIRD_PARTY})
 
-target_link_libraries(QtVTKviewer ${VTK_LIBRARIES} opencv_core)
+target_link_libraries(QtVTKviewer PUBLIC ${VTK_LIBRARIES} opencv_core)
 
 set_target_properties(QtVTKviewer PROPERTIES 
     AUTOMOC ON

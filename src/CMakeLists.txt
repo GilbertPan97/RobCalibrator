@@ -17,12 +17,22 @@ find_package(nlohmann_json REQUIRED HINTS ${THIRD_PARTY}/json-3.11.2/share/cmake
 # build all dependent libs before main window
 add_subdirectory(SfrCalibLibs)
 
+set(HEADER_FILES mainwindow.h)
+
+set(SRC_FILES mainwindow.cpp main.cpp)
+
+set(QRC_FILES 
+    mainwindow.qrc 
+    SfrCalibLibs/QtImgViewer/QtImgViewer.qrc
+)
+
 # build main window execution
-add_executable(${SFRCALIB_MAINWIN} mainwindow.h mainwindow.cpp main.cpp mainwindow.qrc)
+add_executable(${SFRCALIB_MAINWIN} ${SRC_FILES} ${HEADER_FILES} ${QRC_FILES})
 target_include_directories(${SFRCALIB_MAINWIN}  PRIVATE 
                     "${PROJECT_BINARY_DIR}"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/SARibbonBar"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtVTKviewer"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtImgViewer"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtPropertyBrowser"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/Calibrator"
                     ${EIGEN3_INCLUDE_DIRS})
@@ -32,6 +42,7 @@ target_link_libraries(${SFRCALIB_MAINWIN} PRIVATE
                       QtAdvancedDocking
                       QtPropertyBrowser
                       QtVTKviewer
+                      QtImgviewer
                       SARibbonBar
                       Calibrator)
 target_link_libraries(${SFRCALIB_MAINWIN} PUBLIC
