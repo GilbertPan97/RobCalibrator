@@ -28,6 +28,7 @@ set(QRC_FILES
 
 # build main window execution
 add_executable(${SFRCALIB_MAINWIN} ${SRC_FILES} ${HEADER_FILES} ${QRC_FILES})
+
 target_include_directories(${SFRCALIB_MAINWIN}  PRIVATE 
                     "${PROJECT_BINARY_DIR}"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/SARibbonBar"
@@ -66,6 +67,9 @@ set_target_properties(${SFRCALIB_MAINWIN} PROPERTIES
 install(TARGETS ${SFRCALIB_MAINWIN} RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)
 
 if(WIN32)
+    # set ICO file path
+    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon/RobHand.ico)
+
     add_custom_command(TARGET ${SFRCALIB_MAINWIN}
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E
@@ -76,10 +80,8 @@ if(WIN32)
 	create_win32_resource_version(
 		TARGET ${SFRCALIB_MAINWIN}
 		FILENAME ${SFRCALIB_MAINWIN}
-        VERSION_MAJOR ${SFRCALIB_VERSION_MAJOR}
-        VERSION_MINOR ${SFRCALIB_VERSION_MINOR}
-        VERSION_PATCH ${SFRCALIB_VERSION_PATCH}
-        PRODUCT_NAME "SfrCalib"
+        ICON ${ICON_FILE}
+        VERSION ${SFRCALIB_VERSION}
         DESCRIPTION "Ribbon application for robot-camera calibration."
         COMPANY_NAME "Shanghai Fanuc Robotics Co., Ltd."
         COPYRIGHT "Copyright (c) 2023, Shanghai Fanuc Robotics Co. All rights reserved."
