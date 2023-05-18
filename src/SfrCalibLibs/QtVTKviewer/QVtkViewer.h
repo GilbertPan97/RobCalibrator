@@ -1,15 +1,15 @@
 
 /**
- * @class thQVTKOpenGLNativeWidget
+ * @class QVtkViewer
  * @brief QOpenGLWidget subclass to house a vtkGenericOpenGLRenderWindow in a Qt
  * application.
  *
- * thQVTKOpenGLNativeWidget extends QOpenGLWidget to make it work with a
- * vtkGenericOpenGLRenderWindow. it defined a 3D interactive widget.
+ * QVtkViewer extends QOpenGLWidget to make it work with a
+ * QVtkViewer. it defined a 3D interactive widget.
  *
  */
-#ifndef THQVTKOpenGLNativeWidget_h
-#define THQVTKOpenGLNativeWidget_h
+#ifndef QVTKVIEWER_H
+#define QVTKVIEWER_H
 
 #include <iostream>
 
@@ -24,8 +24,7 @@
 #include <vtkNamedColors.h>
 #include <vtkTransformPolyDataFilter.h>
 #include <vtkActor.h>
-
-#include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>       // needed for std::vector<cv::Point3f> display
 
 class QVTKInteractor;
 class QVTKInteractorAdapter;
@@ -42,16 +41,16 @@ enum class zxViewerType {
     ISO,
 };
 
-class thQVTKOpenGLNativeWidget : public QOpenGLWidget
+class QVtkViewer : public QOpenGLWidget
 {
     Q_OBJECT
         typedef QOpenGLWidget Superclass;
 
 public:
-    thQVTKOpenGLNativeWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-    thQVTKOpenGLNativeWidget(vtkGenericOpenGLRenderWindow* window, QWidget* parent = nullptr,
+    QVtkViewer(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    QVtkViewer(vtkGenericOpenGLRenderWindow* window, QWidget* parent = nullptr,
         Qt::WindowFlags f = Qt::WindowFlags());
-    ~thQVTKOpenGLNativeWidget() override;
+    ~QVtkViewer() override;
 
     bool displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize);
     void RenderWinReset();
@@ -196,7 +195,7 @@ protected:
     QScopedPointer<QVTKRenderWindowAdapter> RenderWindowAdapter;
 
 private:
-    Q_DISABLE_COPY(thQVTKOpenGLNativeWidget);
+    Q_DISABLE_COPY(QVtkViewer);
 
     bool EnableHiDPI;
     int UnscaledDPI;

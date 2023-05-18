@@ -1,13 +1,13 @@
-#ifndef THINTERACTORSTYLETRACKBALLCAMERA_H
-#define THINTERACTORSTYLETRACKBALLCAMERA_H
+#ifndef STYLETRACKBALLCAMERA_H
+#define STYLETRACKBALLCAMERA_H
 
-#include "vtkInteractionStyleModule.h" // For export macro
-#include "vtkInteractorStyle.h"
+#include <vtkInteractionStyleModule.h> // For export macro
+#include <vtkInteractorStyle.h>
 
-class thInteractorStyleTrackballCamera : public vtkInteractorStyle {
+class StyleTrackballCamera: public vtkInteractorStyle {
 public:
-    static thInteractorStyleTrackballCamera*New();
-    vtkTypeMacro(thInteractorStyleTrackballCamera, vtkInteractorStyle);
+    static StyleTrackballCamera*New();
+    vtkTypeMacro(StyleTrackballCamera, vtkInteractorStyle);
 
     //@{
     /**
@@ -44,16 +44,16 @@ public:
     //@}
 
 protected:
-    thInteractorStyleTrackballCamera();
-    ~thInteractorStyleTrackballCamera() override;
+    StyleTrackballCamera();
+    ~StyleTrackballCamera() override;
 
     double MotionFactor;
 
     virtual void Dolly(double factor);
 
 private:
-    thInteractorStyleTrackballCamera(const thInteractorStyleTrackballCamera&) = delete;
-    void operator=(const thInteractorStyleTrackballCamera&) = delete;
+    StyleTrackballCamera(const StyleTrackballCamera&) = delete;
+    void operator=(const StyleTrackballCamera&) = delete;
 };
 
 #endif // THINTERACTORSTYLETRACKBALLCAMERA_H

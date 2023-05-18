@@ -24,6 +24,7 @@ set(SRC_FILES mainwindow.cpp main.cpp)
 set(QRC_FILES 
     mainwindow.qrc 
     SfrCalibLibs/QtImgViewer/QtImgViewer.qrc
+    SfrCalibLibs/SARibbonBar/resource.qrc
 )
 
 # build main window execution
@@ -68,7 +69,7 @@ install(TARGETS ${SFRCALIB_MAINWIN} RUNTIME DESTINATION bin LIBRARY DESTINATION 
 
 if(WIN32)
     # set ICO file path
-    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/icon/RobHand.ico)
+    set(ICON_FILE ${CMAKE_CURRENT_SOURCE_DIR}/resource/RobHand.ico)
 
     add_custom_command(TARGET ${SFRCALIB_MAINWIN}
         POST_BUILD

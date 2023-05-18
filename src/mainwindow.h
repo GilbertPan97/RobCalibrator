@@ -1,7 +1,7 @@
 ﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include "SARibbonMainWindow.h"
-#include "thQVTKOpenGLNativeWidget.h"
+#include "QVtkViewer.h"
 #include "DockManager.h"
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
@@ -39,6 +39,7 @@ private:
     QAction* createAction(const QString& text, const QString& iconurl, const QString& objName);
     QAction* createAction(const QString& text, const QString& iconurl);
 
+    void loadQssStyle(SARibbonBar* ribbon);
     bool view3DLoadYML(std::string img_path);
 
 signals:
@@ -52,15 +53,20 @@ private slots:
     void onActionHelpTriggered();
     void onActionRemoveAppBtnTriggered(bool b);
     void showScanData(QListWidgetItem* item);
+    void savePerspective();
+    void restorePerspective();
+    void saveState();
+    void restoreState();
 
 private:
-    SARibbonContextCategory* m_contextCategory;
-    SARibbonContextCategory* m_contextCategory2;
     SARibbonCustomizeWidget* m_customizeWidget;
-    QTextEdit* m_edit;
-    thQVTKOpenGLNativeWidget* m_viewer3d;
+
+    QVtkViewer* m_viewer3d;
     CImageViewer* m_viewer2d;
     QListWidget* m_dataBrowser;
+
+    ads::CDockManager* m_dockManager;
+
     nlohmann::json m_section;
     SARibbonActionsManager* m_actMgr;
     int m_actionTagText;

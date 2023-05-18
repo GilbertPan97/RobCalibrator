@@ -1,6 +1,6 @@
 
-#include "thQVTKOpenGLNativeWidget.h"
-#include "thinteractorstyletrackballcamera.h"
+#include "QVtkViewer.h"
+#include "StyleTrackballCamera.h"
 
 #include <QApplication>
 #include <QDesktopWidget>
@@ -36,26 +36,24 @@
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkOpenGLState.h>
-
 #include <opencv2/opencv.hpp>
 
 //-----------------------------------------------------------------------------
-thQVTKOpenGLNativeWidget::thQVTKOpenGLNativeWidget(QWidget* parentWdg, Qt::WindowFlags f)
-    : thQVTKOpenGLNativeWidget(
-        vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New().GetPointer(), parentWdg, f)
+QVtkViewer::QVtkViewer(QWidget* parentWdg, Qt::WindowFlags f)
+    : QVtkViewer(vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New().GetPointer(), parentWdg, f)
 {
+
 }
 
 //-----------------------------------------------------------------------------
-thQVTKOpenGLNativeWidget::thQVTKOpenGLNativeWidget(
-    vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentWdg, Qt::WindowFlags f)
-    : Superclass(parentWdg, f)
-    , RenderWindow(nullptr)
-    , m_axesWidget(nullptr)
-    , RenderWindowAdapter(nullptr)
-    , EnableHiDPI(true)
-    , UnscaledDPI(72)
-    , DefaultCursor(QCursor(Qt::ArrowCursor))
+QVtkViewer::QVtkViewer(vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentWdg, Qt::WindowFlags f): 
+    Superclass(parentWdg, f),
+    RenderWindow(nullptr),
+    m_axesWidget(nullptr),
+    RenderWindowAdapter(nullptr),
+    EnableHiDPI(true),
+    UnscaledDPI(72),
+    DefaultCursor(QCursor(Qt::ArrowCursor))
 {
     // default to strong focus
     this->setFocusPolicy(Qt::StrongFocus);
@@ -89,7 +87,7 @@ thQVTKOpenGLNativeWidget::thQVTKOpenGLNativeWidget(
     
 }
 
-bool thQVTKOpenGLNativeWidget::displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize)
+bool QVtkViewer::displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize)
 {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
@@ -134,7 +132,7 @@ bool thQVTKOpenGLNativeWidget::displayPoints(std::vector<cv::Point3f> pntCloud, 
     return true;
 }
 
-void thQVTKOpenGLNativeWidget::RenderWinReset()
+void QVtkViewer::RenderWinReset()
 {
     this->RenderWindow->GetRenderers()->GetFirstRenderer()->RemoveActor(m_actor_pnts);
 
@@ -142,7 +140,7 @@ void thQVTKOpenGLNativeWidget::RenderWinReset()
 }
 
 //-----------------------------------------------------------------------------
-thQVTKOpenGLNativeWidget::~thQVTKOpenGLNativeWidget()
+QVtkViewer::~QVtkViewer()
 {
     this->makeCurrent();
     this->cleanupContext();
@@ -156,7 +154,7 @@ thQVTKOpenGLNativeWidget::~thQVTKOpenGLNativeWidget()
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::setRenderWindow(vtkRenderWindow* win)
+void QVtkViewer::setRenderWindow(vtkRenderWindow* win)
 {
     auto gwin = vtkGenericOpenGLRenderWindow::SafeDownCast(win);
     if (win != nullptr && gwin == nullptr)
@@ -168,7 +166,7 @@ void thQVTKOpenGLNativeWidget::setRenderWindow(vtkRenderWindow* win)
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::setRenderWindow(vtkGenericOpenGLRenderWindow* win)
+void QVtkViewer::setRenderWindow(vtkGenericOpenGLRenderWindow* win)
 {
     if (this->RenderWindow == win)
     {
@@ -197,7 +195,7 @@ void thQVTKOpenGLNativeWidget::setRenderWindow(vtkGenericOpenGLRenderWindow* win
             iren->Initialize();
 
             // now set the default style
-            vtkNew<thInteractorStyleTrackballCamera> style;
+            vtkNew<StyleTrackballCamera> style;
             iren->SetInteractorStyle(style);
 
             setAxesSystem(iren);
@@ -219,26 +217,26 @@ void thQVTKOpenGLNativeWidget::setRenderWindow(vtkGenericOpenGLRenderWindow* win
 }
 
 //-----------------------------------------------------------------------------
-vtkRenderWindow* thQVTKOpenGLNativeWidget::renderWindow() const
+vtkRenderWindow* QVtkViewer::renderWindow() const
 {
     return this->RenderWindow;
 }
 
 //-----------------------------------------------------------------------------
-QVTKInteractor* thQVTKOpenGLNativeWidget::interactor() const
+QVTKInteractor* QVtkViewer::interactor() const
 {
     return this->RenderWindow ? QVTKInteractor::SafeDownCast(this->RenderWindow->GetInteractor())
         : nullptr;
 }
 
 //-----------------------------------------------------------------------------
-QSurfaceFormat thQVTKOpenGLNativeWidget::defaultFormat(bool stereo_capable)
+QSurfaceFormat QVtkViewer::defaultFormat(bool stereo_capable)
 {
     return QVTKRenderWindowAdapter::defaultFormat(stereo_capable);
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::setEnableHiDPI(bool enable)
+void QVtkViewer::setEnableHiDPI(bool enable)
 {
     this->EnableHiDPI = enable;
     if (this->RenderWindowAdapter)
@@ -248,7 +246,7 @@ void thQVTKOpenGLNativeWidget::setEnableHiDPI(bool enable)
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::setUnscaledDPI(int dpi)
+void QVtkViewer::setUnscaledDPI(int dpi)
 {
     this->UnscaledDPI = dpi;
     if (this->RenderWindowAdapter)
@@ -258,7 +256,7 @@ void thQVTKOpenGLNativeWidget::setUnscaledDPI(int dpi)
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::setDefaultCursor(const QCursor& cursor)
+void QVtkViewer::setDefaultCursor(const QCursor& cursor)
 {
     this->DefaultCursor = cursor;
     if (this->RenderWindowAdapter)
@@ -267,7 +265,7 @@ void thQVTKOpenGLNativeWidget::setDefaultCursor(const QCursor& cursor)
     }
 }
 
-void thQVTKOpenGLNativeWidget::setAxesSystem(vtkRenderWindowInteractor* iren)
+void QVtkViewer::setAxesSystem(vtkRenderWindowInteractor* iren)
 {
     if (!iren)
     {
@@ -356,7 +354,7 @@ void thQVTKOpenGLNativeWidget::setAxesSystem(vtkRenderWindowInteractor* iren)
     m_axesWidget->SetInteractive(0);
 }
 
-std::vector<vtkSmartPointer<vtkActor>> thQVTKOpenGLNativeWidget::MakePlanesActors(vtkNamedColors* colors) {
+std::vector<vtkSmartPointer<vtkActor>> QVtkViewer::MakePlanesActors(vtkNamedColors* colors) {
     std::vector<vtkSmartPointer<vtkTransformPolyDataFilter>> planes;
     std::vector<vtkSmartPointer<vtkPolyDataMapper>> mappers;
     std::vector<vtkSmartPointer<vtkActor>> actors;
@@ -398,7 +396,7 @@ std::vector<vtkSmartPointer<vtkActor>> thQVTKOpenGLNativeWidget::MakePlanesActor
     return actors;
 }
 
-vtkSmartPointer<vtkTransformPolyDataFilter> thQVTKOpenGLNativeWidget::MakePlane(
+vtkSmartPointer<vtkTransformPolyDataFilter> QVtkViewer::MakePlane(
     std::array<int, 2>& resolution, std::array<double, 3>& origin,
     std::array<double, 3>& point1, std::array<double, 3>& point2,
     std::array<double, 4>& wxyz, std::array<double, 3>& translate) {
@@ -418,7 +416,7 @@ vtkSmartPointer<vtkTransformPolyDataFilter> thQVTKOpenGLNativeWidget::MakePlane(
     return tpdPlane;
 }
 
-void thQVTKOpenGLNativeWidget::setReferenceAxesSystem()
+void QVtkViewer::setReferenceAxesSystem()
 {
     if (this->RenderWindow)
     {
@@ -466,7 +464,7 @@ void thQVTKOpenGLNativeWidget::setReferenceAxesSystem()
     
 }
 
-void thQVTKOpenGLNativeWidget::setViewerType(zxViewerType type)
+void QVtkViewer::setViewerType(zxViewerType type)
 {
     if (type == m_viewType) return;
 
@@ -539,7 +537,7 @@ void thQVTKOpenGLNativeWidget::setViewerType(zxViewerType type)
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::initializeGL()
+void QVtkViewer::initializeGL()
 {
     this->Superclass::initializeGL();
     if (this->RenderWindow)
@@ -564,7 +562,7 @@ void thQVTKOpenGLNativeWidget::initializeGL()
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::updateSize()
+void QVtkViewer::updateSize()
 {
     if (this->RenderWindowAdapter)
     {
@@ -573,7 +571,7 @@ void thQVTKOpenGLNativeWidget::updateSize()
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::paintGL()
+void QVtkViewer::paintGL()
 {
     this->Superclass::paintGL();
     if (this->RenderWindow)
@@ -606,13 +604,13 @@ void thQVTKOpenGLNativeWidget::paintGL()
 }
 
 //-----------------------------------------------------------------------------
-void thQVTKOpenGLNativeWidget::cleanupContext()
+void QVtkViewer::cleanupContext()
 {
     this->RenderWindowAdapter.reset(nullptr);
 }
 
 //-----------------------------------------------------------------------------
-bool thQVTKOpenGLNativeWidget::event(QEvent* evt)
+bool QVtkViewer::event(QEvent* evt)
 {
     if (this->RenderWindowAdapter)
     {
@@ -623,7 +621,7 @@ bool thQVTKOpenGLNativeWidget::event(QEvent* evt)
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-void thQVTKOpenGLNativeWidget::SetRenderWindow(vtkRenderWindow* win)
+void QVtkViewer::SetRenderWindow(vtkRenderWindow* win)
 {
     VTK_LEGACY_REPLACED_BODY(
         QVTKOpenGLNativeWidget::SetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::setRenderWindow);
@@ -639,7 +637,7 @@ void thQVTKOpenGLNativeWidget::SetRenderWindow(vtkRenderWindow* win)
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-void thQVTKOpenGLNativeWidget::SetRenderWindow(vtkGenericOpenGLRenderWindow* win)
+void QVtkViewer::SetRenderWindow(vtkGenericOpenGLRenderWindow* win)
 {
     VTK_LEGACY_REPLACED_BODY(
         QVTKOpenGLNativeWidget::SetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::setRenderWindow);
@@ -649,7 +647,7 @@ void thQVTKOpenGLNativeWidget::SetRenderWindow(vtkGenericOpenGLRenderWindow* win
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-vtkRenderWindow* thQVTKOpenGLNativeWidget::GetRenderWindow()
+vtkRenderWindow* QVtkViewer::GetRenderWindow()
 {
     VTK_LEGACY_REPLACED_BODY(
         QVTKOpenGLNativeWidget::GetRenderWindow, "VTK 9.0", QVTKOpenGLNativeWidget::renderWindow);
@@ -659,7 +657,7 @@ vtkRenderWindow* thQVTKOpenGLNativeWidget::GetRenderWindow()
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-QVTKInteractorAdapter* thQVTKOpenGLNativeWidget::GetInteractorAdapter()
+QVTKInteractorAdapter* QVtkViewer::GetInteractorAdapter()
 {
     VTK_LEGACY_BODY(QVTKOpenGLNativeWidget::GetInteractorAdapter, "VTK 9.0");
     return nullptr;
@@ -668,7 +666,7 @@ QVTKInteractorAdapter* thQVTKOpenGLNativeWidget::GetInteractorAdapter()
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-QVTKInteractor* thQVTKOpenGLNativeWidget::GetInteractor()
+QVTKInteractor* QVtkViewer::GetInteractor()
 {
     VTK_LEGACY_REPLACED_BODY(
         QVTKOpenGLNativeWidget::GetInteractor, "VTK 9.0", QVTKOpenGLNativeWidget::interactor);
@@ -678,7 +676,7 @@ QVTKInteractor* thQVTKOpenGLNativeWidget::GetInteractor()
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-void thQVTKOpenGLNativeWidget::setQVTKCursor(const QCursor& cursor)
+void QVtkViewer::setQVTKCursor(const QCursor& cursor)
 {
     VTK_LEGACY_REPLACED_BODY(
         QVTKOpenGLNativeWidget::setQVTKCursor, "VTK 9.0", QVTKOpenGLNativeWidget::setCursor);
@@ -688,7 +686,7 @@ void thQVTKOpenGLNativeWidget::setQVTKCursor(const QCursor& cursor)
 
 //-----------------------------------------------------------------------------
 #if !defined(VTK_LEGACY_REMOVE)
-void thQVTKOpenGLNativeWidget::setDefaultQVTKCursor(const QCursor& cursor)
+void QVtkViewer::setDefaultQVTKCursor(const QCursor& cursor)
 {
     VTK_LEGACY_REPLACED_BODY(QVTKOpenGLNativeWidget::setDefaultQVTKCursor, "VTK 9.0",
         QVTKOpenGLNativeWidget::setDefaultCursor);

@@ -1,27 +1,28 @@
-#include "thInteractorStyleTrackballCamera.h"
-#include "vtkCallbackCommand.h"
-#include "vtkCamera.h"
-#include "vtkMath.h"
-#include "vtkMatrix3x3.h"
-#include "vtkObjectFactory.h"
-#include "vtkRenderWindow.h"
-#include "vtkRenderWindowInteractor.h"
-#include "vtkRenderer.h"
+#include "StyleTrackballCamera.h"
+
+#include <vtkCallbackCommand.h>
+#include <vtkCamera.h>
+#include <vtkMath.h>
+#include <vtkMatrix3x3.h>
+#include <vtkObjectFactory.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
 
 //----------------------------------------------------------------------------
-thInteractorStyleTrackballCamera::thInteractorStyleTrackballCamera() {
+StyleTrackballCamera::StyleTrackballCamera() {
     this->MotionFactor = 10.0;
 }
 
 //----------------------------------------------------------------------------
-thInteractorStyleTrackballCamera::~thInteractorStyleTrackballCamera() = default;
+StyleTrackballCamera::~StyleTrackballCamera() = default;
 
 //----------------------------------------------------------------------------
-thInteractorStyleTrackballCamera* thInteractorStyleTrackballCamera::New() {
-    return new thInteractorStyleTrackballCamera;
+StyleTrackballCamera* StyleTrackballCamera::New() {
+    return new StyleTrackballCamera;
 }
 
-void thInteractorStyleTrackballCamera::OnMouseMove() {
+void StyleTrackballCamera::OnMouseMove() {
     int x = this->Interactor->GetEventPosition()[0];
     int y = this->Interactor->GetEventPosition()[1];
 
@@ -59,7 +60,7 @@ void thInteractorStyleTrackballCamera::OnMouseMove() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnLeftButtonDown() {
+void StyleTrackballCamera::OnLeftButtonDown() {
     this->FindPokedRenderer(
         this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
     if (this->CurrentRenderer == nullptr) {
@@ -75,7 +76,7 @@ void thInteractorStyleTrackballCamera::OnLeftButtonDown() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnLeftButtonUp() {
+void StyleTrackballCamera::OnLeftButtonUp() {
 
     switch (this->State) {
         case VTKIS_PAN:
@@ -93,7 +94,7 @@ void thInteractorStyleTrackballCamera::OnLeftButtonUp() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnMiddleButtonDown() {
+void StyleTrackballCamera::OnMiddleButtonDown() {
     this->FindPokedRenderer(
         this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
     if (this->CurrentRenderer == nullptr) {
@@ -105,7 +106,7 @@ void thInteractorStyleTrackballCamera::OnMiddleButtonDown() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnMiddleButtonUp() {
+void StyleTrackballCamera::OnMiddleButtonUp() {
     switch (this->State) {
         case VTKIS_PAN:
             this->EndPan();
@@ -117,7 +118,7 @@ void thInteractorStyleTrackballCamera::OnMiddleButtonUp() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnRightButtonDown() {
+void StyleTrackballCamera::OnRightButtonDown() {
     this->FindPokedRenderer(
         this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
     if (this->CurrentRenderer == nullptr) {
@@ -136,7 +137,7 @@ void thInteractorStyleTrackballCamera::OnRightButtonDown() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnRightButtonUp() {
+void StyleTrackballCamera::OnRightButtonUp() {
 
     switch (this->State) {
         case VTKIS_GESTURE:
@@ -154,7 +155,7 @@ void thInteractorStyleTrackballCamera::OnRightButtonUp() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnMouseWheelForward() {
+void StyleTrackballCamera::OnMouseWheelForward() {
     this->FindPokedRenderer(
         this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
     if (this->CurrentRenderer == nullptr) {
@@ -170,7 +171,7 @@ void thInteractorStyleTrackballCamera::OnMouseWheelForward() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::OnMouseWheelBackward() {
+void StyleTrackballCamera::OnMouseWheelBackward() {
     this->FindPokedRenderer(
         this->Interactor->GetEventPosition()[0], this->Interactor->GetEventPosition()[1]);
     if (this->CurrentRenderer == nullptr) {
@@ -186,7 +187,7 @@ void thInteractorStyleTrackballCamera::OnMouseWheelBackward() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::Rotate() {
+void StyleTrackballCamera::Rotate() {
     if (this->CurrentRenderer == nullptr) {
         return;
     }
@@ -221,7 +222,7 @@ void thInteractorStyleTrackballCamera::Rotate() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::Spin() {
+void StyleTrackballCamera::Spin() {
     if (this->CurrentRenderer == nullptr) {
         return;
     }
@@ -244,7 +245,7 @@ void thInteractorStyleTrackballCamera::Spin() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::Pan() {
+void StyleTrackballCamera::Pan() {
     if (this->CurrentRenderer == nullptr) {
         return;
     }
@@ -292,7 +293,7 @@ void thInteractorStyleTrackballCamera::Pan() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::Dolly() {
+void StyleTrackballCamera::Dolly() {
     if (this->CurrentRenderer == nullptr) {
         return;
     }
@@ -305,7 +306,7 @@ void thInteractorStyleTrackballCamera::Dolly() {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::Dolly(double factor) {
+void StyleTrackballCamera::Dolly(double factor) {
     if (this->CurrentRenderer == nullptr) {
         return;
     }
@@ -328,7 +329,7 @@ void thInteractorStyleTrackballCamera::Dolly(double factor) {
 }
 
 //----------------------------------------------------------------------------
-void thInteractorStyleTrackballCamera::EnvironmentRotate() {
+void StyleTrackballCamera::EnvironmentRotate() {
     if (this->CurrentRenderer == nullptr) {
         return;
     }

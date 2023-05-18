@@ -1,11 +1,11 @@
 set(SRC_FILES
-    thinteractorstyletrackballcamera.cpp
-    thQVTKOpenGLNativeWidget.cpp
+    StyleTrackballCamera.cpp
+    QVtkViewer.cpp
 )
 
 set(HEADER_FILES
-    thinteractorstyletrackballcamera.h
-    thQVTKOpenGLNativeWidget.h
+    StyleTrackballCamera.h
+    QVtkViewer.h
 )
 
 source_group("Header Files" FILES ${HEADER_FILES})

@@ -1,100 +1,36 @@
 <RCC>
-    <qresource prefix="/icon">
-        <file>icon/largerFont.svg</file>
-        <file>icon/smallFont.svg</file>
-        <file>icon/save.svg</file>
-        <file>icon/hideRibbon.svg</file>
-        <file>icon/showHideButton.svg</file>
-        <file>icon/item.svg</file>
-        <file>icon/test1.svg</file>
-        <file>icon/test2.svg</file>
-        <file>icon/folder-cog.svg</file>
-        <file>icon/folder-star.svg</file>
-        <file>icon/folder-stats.svg</file>
-        <file>icon/folder-table.svg</file>
-        <file>icon/folder-checkmark.svg</file>
-        <file>icon/showContext.svg</file>
-        <file>icon/deleteContext.svg</file>
-        <file>icon/disable.svg</file>
-        <file>icon/customize.svg</file>
-        <file>icon/customize0.svg</file>
-        <file>icon/undo.svg</file>
-        <file>icon/redo.svg</file>
-        <file>icon/presentationFile.svg</file>
-        <file>icon/file.svg</file>
-        <file>icon/SA.svg</file>
-        <file>icon/help.svg</file>
-        <file>icon/Decrease-Margin.svg</file>
-        <file>icon/Decrease-Indent.svg</file>
-        <file>icon/Align-Right.svg</file>
-        <file>icon/Align-Left.svg</file>
-        <file>icon/Align-Center.svg</file>
-        <file>icon/Wrap-Image Left.svg</file>
-        <file>icon/Wrap-Image Right.svg</file>
-        <file>icon/remove-app-btn.svg</file>
-        <file>icon/long-text.svg</file>
-        <file>icon/useqss.svg</file>
-        <file>icon/useCustomize.svg</file>
-        <file>icon/windowsflag-normal.svg</file>
-        <file>icon/chinese-char.svg</file>
-        <file>icon/ContextCategory.svg</file>
-        <file>icon/remove.svg</file>
-        <file>icon/removePage.svg</file>
-        <file>icon/hidePannel.svg</file>
-        <file>icon/unlock.svg</file>
-        <file>icon/setText.svg</file>
-        <file>icon/show.svg</file>
-        <file>icon/action.svg</file>
-        <file>icon/action4.svg</file>
-        <file>icon/action3.svg</file>
-        <file>icon/action2.svg</file>
-        <file>icon/enableTest.svg</file>
-        <file>icon/delete.svg</file>
-        <file>icon/layout.svg</file>
-        <file>icon/wordwrap.svg</file>
-        <file>icon/al-bothside.svg</file>
-        <file>icon/al-left.svg</file>
-        <file>icon/al-center.svg</file>
-        <file>icon/al-right.svg</file>
-        <file>icon/Underline.svg</file>
-        <file>icon/Italic.svg</file>
-        <file>icon/bold.svg</file>
-		
-		<file>icon/new.svg</file>
-		<file>icon/camera.svg</file>
-		<file>icon/save1.svg</file>
-		<file>icon/open.svg</file>
-		<file>icon/robot.svg</file>
-		<file>icon/images.svg</file>
-		<file>icon/tools.svg</file>
-		<file>icon/calibration.svg</file>
-		<file>icon/export.svg</file>
-		<file>icon/display.svg</file>
-		<file>icon/algorithms.svg</file>
-		<file>icon/RobHand.svg</file>
-        <file>icon/photo.svg</file>
-        <file>icon/color_lens.svg</file>
-        <file>icon/date_range.svg</file>
-        <file>icon/folder.svg</file>
-		<file>icon/type.svg</file>
+    <qresource prefix="/icon">	
+        <file>resource/save.svg</file>
+        <file>resource/undo.svg</file>
+        <file>resource/redo.svg</file>
+        <file>resource/presentationFile.svg</file>
+        <file>resource/file.svg</file>
+        <file>resource/customize.svg</file>
+        <file>resource/help.svg</file>
+        <file>resource/layout.svg</file>
+
+		<file>resource/new.svg</file>
+		<file>resource/camera.svg</file>
+		<file>resource/save1.svg</file>
+		<file>resource/open.svg</file>
+		<file>resource/robot.svg</file>
+		<file>resource/images.svg</file>
+		<file>resource/tools.svg</file>
+		<file>resource/calibration.svg</file>
+		<file>resource/export.svg</file>
+		<file>resource/display.svg</file>
+		<file>resource/algorithms.svg</file>
+		<file>resource/RobHand.svg</file>
+        <file>resource/photo.svg</file>
+        <file>resource/color_lens.svg</file>
+        <file>resource/date_range.svg</file>
+        <file>resource/folder.svg</file>
+		<file>resource/type.svg</file>
+        <file>resource/show.svg</file>
     </qresource>
-    <qresource prefix="/gallery-icon">
-        <file>icon/gallery/Document-File.svg</file>
-        <file>icon/gallery/Download-File.svg</file>
-        <file>icon/gallery/Drive-File.svg</file>
-        <file>icon/gallery/Dropbox-File.svg</file>
-        <file>icon/gallery/Email-File.svg</file>
-        <file>icon/gallery/Encode-File.svg</file>
-        <file>icon/gallery/Favorit-File.svg</file>
-        <file>icon/gallery/File-Error.svg</file>
-        <file>icon/gallery/File-Readonly.svg</file>
-        <file>icon/gallery/File-Settings.svg</file>
-        <file>icon/gallery/Presentation-File.svg</file>
-        <file>icon/gallery/Photoshop.svg</file>
-        <file>icon/gallery/Internet-Explorer.svg</file>
-        <file>icon/gallery/Illustrator.svg</file>
-        <file>icon/gallery/Google-Maps.svg</file>
-        <file>icon/gallery/Adobe.svg</file>
-        <file>icon/gallery/Word.svg</file>
+    
+    <qresource prefix="/theme">
+        <file>resource/default.qss</file>
+        <file>resource/office2013.qss</file>
     </qresource>
 </RCC>
