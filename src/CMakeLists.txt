@@ -11,6 +11,14 @@ message(STATUS "current Qt version is Qt${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.
 find_package(Eigen3 REQUIRED HINTS ${THIRD_PARTY})
 message(STATUS ${EIGEN3_INCLUDE_DIRS})
 
+# find vtk package: used for QtVTKviewer
+find_package(VTK REQUIRED HINTS ${THIRD_PARTY})
+option(VTK_USE_QVTK_OPENGL_NATIVE "Use QVTKOpenGLNativeWidget for rendering" ON)
+if (VTK_USE_QVTK_OPENGL_NATIVE)
+  add_definitions(-DVTK_USE_QVTK_OPENGL_NATIVE)
+endif()
+message(STATUS "VTK package dir is: ${VTK_DIR}")
+
 # find nlohmann_json package: for main window exec
 find_package(nlohmann_json REQUIRED HINTS ${THIRD_PARTY}/json-3.11.2/share/cmake/nlohmann_json)
 
@@ -51,6 +59,7 @@ target_link_libraries(${SFRCALIB_MAINWIN} PUBLIC
                       Qt${QT_VERSION_MAJOR}::Core 
                       Qt${QT_VERSION_MAJOR}::Gui 
                       Qt${QT_VERSION_MAJOR}::Widgets
+                      ${VTK_LIBRARIES}
                       nlohmann_json::nlohmann_json)
 
 set_target_properties(${SFRCALIB_MAINWIN} PROPERTIES 

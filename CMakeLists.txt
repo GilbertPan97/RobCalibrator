@@ -7,14 +7,12 @@ set(SFRCALIB_VERSION_PATCH 0)
 set(SFRCALIB_VERSION "${SFRCALIB_VERSION_MAJOR}.${SFRCALIB_VERSION_MINOR}.${SFRCALIB_VERSION_PATCH}")
 message(STATUS "SfrCalib version is: ${SFRCALIB_VERSION}")
 
-add_compile_options(/bigobj)    # add big obj option to avoid calibrator build fail
-
 # local dependent package
 set(THIRD_PARTY "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
-project(SfrCalib VERSION ${SFRCALIB_VERSION} LANGUAGES CXX)
+project(SfrCalib VERSION ${SFRCALIB_VERSION})
 
-option(BUILD_EXAMPLES "build the examples" ON)
-option(BUILD_DESIGNERPLUGIN "build the Designer Plugin" ON)
+option(BUILD_EXAMPLES "build the examples" OFF)
+option(BUILD_DESIGNERPLUGIN "build the Designer Plugin" OFF)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -25,6 +23,7 @@ set(CMAKE_MINSIZEREL_POSTFIX "s" CACHE STRING "add a postfix, usually empty on w
 
 if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4819")
+    add_compile_options(/bigobj)    # add big obj option to avoid calibrator build fail
 endif()
 
 include(CPack)
