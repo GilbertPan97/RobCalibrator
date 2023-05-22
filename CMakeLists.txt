@@ -11,10 +11,10 @@ message(STATUS "SfrCalib version is: ${SFRCALIB_VERSION}")
 set(THIRD_PARTY "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 project(SfrCalib VERSION ${SFRCALIB_VERSION})
 
-option(BUILD_EXAMPLES "build the examples" OFF)
+option(BUILD_EXAMPLES "build the examples" ON)
 option(BUILD_DESIGNERPLUGIN "build the Designer Plugin" OFF)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
