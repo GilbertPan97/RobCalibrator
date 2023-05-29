@@ -25,9 +25,14 @@ find_package(nlohmann_json REQUIRED HINTS ${THIRD_PARTY}/json-3.11.2/share/cmake
 # build all dependent libs before main window
 add_subdirectory(SfrCalibLibs)
 
-set(HEADER_FILES mainwindow.h)
+set(HEADER_FILES 
+    mainwindow.h
+    startupprogresswindow.h)
 
-set(SRC_FILES mainwindow.cpp main.cpp)
+set(SRC_FILES 
+    mainwindow.cpp 
+    startupprogresswindow.cpp
+    main.cpp)
 
 set(QRC_FILES 
     mainwindow.qrc 
@@ -72,6 +77,7 @@ set_target_properties(${SFRCALIB_MAINWIN} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
     LIBRARY_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
     RUNTIME_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
+    # WIN32_EXECUTABLE true
 )
 
 install(TARGETS ${SFRCALIB_MAINWIN} RUNTIME DESTINATION bin LIBRARY DESTINATION bin ARCHIVE DESTINATION lib)

@@ -28,6 +28,11 @@
 		<file>resource/type.svg</file>
         <file>resource/show.svg</file>
     </qresource>
+	
+	<qresource prefix="/animations">	
+		<file>resource/loading.gif</file>
+        <file>resource/loading1.jfif</file>
+	</qresource>
     
     <qresource prefix="/theme">
         <file>resource/default.qss</file>

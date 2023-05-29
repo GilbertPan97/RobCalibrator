@@ -103,6 +103,16 @@ add_library(${LIB_NAME} SHARED
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
 
+if(QT_VERSION_MAJOR STREQUAL "5")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON)
+elseif(QT_VERSION_MAJOR STREQUAL "6")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+endif()
+
 target_link_libraries(${LIB_NAME} PUBLIC
                       Qt${QT_VERSION_MAJOR}::Core
                       Qt${QT_VERSION_MAJOR}::Gui
@@ -125,10 +135,10 @@ target_compile_definitions(${LIB_NAME} PRIVATE SA_RIBBON_BAR_MAKE_LIB)
 target_include_directories(${LIB_NAME} INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 install(TARGETS ${LIB_NAME}
 	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION bin
+	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
 )
-install(FILES ${SARIBBON_HEADER_FILES} DESTINATION include)
+install(FILES ${SARIBBON_HEADER_FILES} DESTINATION include/SARibbon)
 
 if(WIN32)
 	create_win32_resource_version(

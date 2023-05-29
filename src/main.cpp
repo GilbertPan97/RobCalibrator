@@ -68,3 +68,28 @@ int main(int argc, char* argv[])
 
     return (a.exec());
 }
+
+
+// int main(int argc, char* argv[]){
+    
+    // QApplication app(argc, argv);
+
+    // // 创建 QLabel 控件用于显示动画
+    // QLabel label;
+
+    // // 创建 QMovie 对象并加载 GIF 文件
+    // QMovie movie("C:\\Users\\GilbertPan\\Desktop\\RobLab\\src\\resource\\loading.gif");
+
+    // // 设置动画到 QLabel 控件
+    // label.setMovie(&movie);
+
+    // // 开始播放动画
+    // movie.start();
+
+    // // 设置窗口属性
+    // label.setWindowTitle("GIF Animation");
+    // label.resize(400, 300);
+    // label.show();
+
+    // return app.exec();
+// }

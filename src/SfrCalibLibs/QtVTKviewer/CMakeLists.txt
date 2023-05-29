@@ -18,6 +18,16 @@ add_library(QtVTKviewer ${HEADER_FILES} ${SRC_FILES})
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
 
+if(QT_VERSION_MAJOR STREQUAL "5")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON)
+elseif(QT_VERSION_MAJOR STREQUAL "6")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+endif()
+
 # find vtk package: used for QtVTKviewer
 find_package(VTK REQUIRED HINTS ${THIRD_PARTY})
 option(VTK_USE_QVTK_OPENGL_NATIVE "Use QVTKOpenGLNativeWidget for rendering" ON)
@@ -41,8 +51,28 @@ set_target_properties(QtVTKviewer PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
 )
 
+set(library_name "QtVTKviewer")
+
+include(CMakePackageConfigHelpers)
+# configure_package_config_file(${CMAKE_SOURCE_DIR }/cmake/project-config-version.cmake.cmake.in
+#                               ${CMAKE_CURRENT_BINARY_DIR}/${library_name}Config.cmake
+#                               INSTALL_DESTINATION lib/cmake/${library_name})
+
+write_basic_package_version_file(
+    "${library_name}ConfigVersion.cmake"
+    VERSION ${VERSION_SHORT}
+    COMPATIBILITY SameMajorVersion
+)
+
 install(TARGETS QtVTKviewer
-  RUNTIME DESTINATION ${INSTALL_DIR}/bin/$<CONFIG>/QtVTKviewer
-  LIBRARY DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtVTKviewer
-  ARCHIVE DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtVTKviewer
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+install(FILES ${HEADER_FILES}
+    DESTINATION include/QtVTKviewer)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${library_name}ConfigVersion.cmake"
+    DESTINATION lib/cmake/${library_name}
 )

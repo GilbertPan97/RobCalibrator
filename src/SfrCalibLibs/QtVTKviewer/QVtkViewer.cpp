@@ -26,8 +26,8 @@
 #include <vtkPlaneSource.h>
 #include <vtkTransform.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkSTLReader.h>
 #include <vtkCamera.h>
-
 #include <QVTKInteractor.h>
 #include <QVTKInteractorAdapter.h>
 #include <QVTKRenderWindowAdapter.h>
@@ -36,6 +36,7 @@
 #include <vtkNew.h>
 #include <vtkObjectFactory.h>
 #include <vtkOpenGLState.h>
+
 #include <opencv2/opencv.hpp>
 
 //-----------------------------------------------------------------------------
@@ -87,7 +88,7 @@ QVtkViewer::QVtkViewer(vtkGenericOpenGLRenderWindow* renderWin, QWidget* parentW
     
 }
 
-bool QVtkViewer::displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize)
+bool QVtkViewer::pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize)
 {
     vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New();
     vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New();
@@ -126,6 +127,29 @@ bool QVtkViewer::displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize)
     std::cout << "INFO: The number of renders is: "
               << this->RenderWindow->GetRenderers()->GetNumberOfItems() << std::endl;
     this->RenderWindow->GetRenderers()->GetFirstRenderer()->AddActor(m_actor_pnts);
+
+    this->RenderWindow->Render();
+
+    return true;
+}
+
+bool QVtkViewer::stlDiaplay(std::string stl_path)
+{
+    // Create STL file reader
+    vtkSmartPointer<vtkSTLReader> reader = vtkSmartPointer<vtkSTLReader>::New();
+    reader->SetFileName(stl_path.c_str());
+    reader->Update();
+
+    // Create PolyDataMapper to connect reader output to Actor
+    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+    mapper->SetInputConnection(reader->GetOutputPort());     // stl model
+
+    // Create Actor and set Mapper
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+    actor->SetMapper(mapper);
+
+    // Add actor
+    this->RenderWindow->GetRenderers()->GetFirstRenderer()->AddActor(actor);
 
     this->RenderWindow->Render();
 

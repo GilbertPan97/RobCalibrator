@@ -68,6 +68,7 @@
 #include <QInputDialog>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QPropertyAnimation>
 #include <QMessageBox>
 #include <QSettings>
 #include <QAction>
@@ -85,8 +86,11 @@
 #include <QTextStream>
 #include <QFontComboBox>
 #include <QLabel>
+#include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QScreen>
+#include <QCloseEvent>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -109,6 +113,18 @@ MainWindow::MainWindow(QWidget* par) :
     SARibbonMainWindow(par), 
     m_customizeWidget(nullptr)
 {
+    // startup Progress Window
+    m_startupProgressWindow = new StartupProgressWindow();
+
+    m_startupProgressWindow->show();
+    QApplication::processEvents();          // Refresh gui
+    m_startupProgressWindow->wait(3000);
+
+    // get screen size
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSize scrnSize = screen->size();
+
+    // create helper widget
     SAFramelessHelper* helper = framelessHelper();
     helper->setRubberBandOnResize(false);
     setWindowTitle(("SfrCalib"));
@@ -163,12 +179,22 @@ MainWindow::MainWindow(QWidget* par) :
     createRightButtonGroup(rightBar);
     addSomeOtherAction();
 
-    this->setMinimumWidth(1200);
-    this->setMinimumHeight(800);
+    // create status bar and add to main window
+    createStatusBar();
+    
+    // set main window minimum size, and create a window shrink animation
+    QSize minSize = {scrnSize.width()/2, scrnSize.height()/2};
+    this->setMinimumSize(minSize);
+
+    // startup Progress Window hide
+    m_startupProgressWindow->hide();
 
     // Maximize show main window & set window Icon
     this->showMaximized();
     this->setWindowIcon(QIcon(":/icon/resource/RobHand.svg"));
+
+    // Test stl model load
+    // this->view3DLoadStl("../../data/ScanData/SR7140.STL");
 }
 
 ads::CDockWidget* MainWindow::createQtVTKviewerDockWidget()
@@ -201,7 +227,7 @@ ads::CDockWidget* MainWindow::createPropertyBrowser()
     
     QWidget* w = new QWidget();
 
-    // BUG: createPropertyBrowser before should createDataBrowserDockWidget
+    // BUG: createPropertyBrowser should createDataBrowserDockWidget first
     QtStringPropertyManager* fileName = new QtStringPropertyManager(w);
     QtPathPropertyManager* filePath = new QtPathPropertyManager(w);
     QtStringPropertyManager* objName = new QtStringPropertyManager(w);
@@ -232,11 +258,16 @@ ads::CDockWidget* MainWindow::createPropertyBrowser()
     editor->addProperty(item7);
 
     // connect data browser and property browser
+    if(m_dataBrowser == nullptr){
+        std::cout << "ERROR: Data browser can not connect to property browser. "
+                  << "Please create property browser first.\n";
+        exit(-1);
+    }
     connect(m_dataBrowser, &QListWidget::itemActivated, this, [=](QListWidgetItem* item){
         QString file_name = item->text();
         fileName->setValue(item0, file_name);
 
-        auto ImgSaveDir = m_section["ImagesDir"];
+        auto ImgSaveDir = m_section["Dataset"]["ImagesDir"];
         QString ImgPath = QString::fromStdString(ImgSaveDir) + "/" + file_name;
         filePath->setValue(item1, ImgPath);
 
@@ -295,13 +326,13 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
     // read files from image directory
     connect(this, &MainWindow::signalUpdateBrowser, this, [this](){
         // check m_section
-        if(m_section["ImagesDir"].empty()){
+        if(m_section["Dataset"]["ImagesDir"].empty()){
             std::cout << "ERROR: Images directory is empty.\n";
             return;
         }
 
         // set filter extension
-        QString folderPath = QString::fromStdString(m_section["ImagesDir"]);
+        QString folderPath = QString::fromStdString(m_section["Dataset"]["ImagesDir"]);
         QString fileExtension = "*.yml";
 
         QDir folder(folderPath);
@@ -345,7 +376,7 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     /* calibration section */
     static QString section_path;
     QAction* actNewSection = createAction(tr("New Section"), ":/icon/resource/new.svg");
-    connect(actNewSection, &QAction::triggered, this, &MainWindow::onNewSectionTriggered);
+    connect(actNewSection, &QAction::triggered, this, [this](){ sectionWidget(false); });
 
     QAction* actOpenSection = createAction(tr("Open Section"), ":/icon/resource/open.svg");
     connect(actOpenSection, &QAction::triggered, this, [this](){
@@ -353,18 +384,27 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
             this,
             QStringLiteral("Open Section."),
             QCoreApplication::applicationDirPath(),
-            QStringLiteral("Calibration Section (*.json)")
+            QStringLiteral("Calibration Section (*.sec)")
         );
 
-        if(!section_path_in.isEmpty()){
-            std::ifstream js_file_in(section_path_in.toStdString());
-            m_section = nlohmann::json::parse(js_file_in);
-            js_file_in.close();
+        if(section_path_in.isEmpty()){
+            std::cout << "WARNING: No section file load.\n";
+            return;
         }
 
-        emit signalUpdateBrowser();
+        // parse json file to m_section
+        std::ifstream js_file_in(section_path_in.toStdString());
+        m_section = nlohmann::json::parse(js_file_in);
+        js_file_in.close();
 
+        // display m_section with sectionWidget
+        sectionWidget(true);
+
+        // set section_path (static value) to store save state
         section_path = section_path_in;
+
+        // emit update signal to refersh other widget, such as 3D viewer and property browser.
+        emit signalUpdateBrowser();
     });
 
     QAction* actSaveSection = createAction(tr("Save Section"), ":/icon/resource/save1.svg");
@@ -372,14 +412,14 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
         // get save data and add to section
         QDateTime currentDateTime = QDateTime::currentDateTime();
         QString currentTimeString = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
-        m_section["SaveTime"] = currentTimeString.toStdString();
+        m_section["Description"]["SaveTime"] = currentTimeString.toStdString();
 
         if(section_path.isEmpty())
             section_path = QFileDialog::getSaveFileName(
                 this, 
                 QStringLiteral("Section Saveing Path."),
                 QCoreApplication::applicationDirPath(), 
-                QStringLiteral("Calibration Section (*.json)")
+                QStringLiteral("Calibration Section (*.sec)")
             );
         std::ofstream json_file_out(section_path.toStdString());
 		json_file_out << std::setw(4) << m_section << std::endl;
@@ -400,7 +440,7 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
             QCoreApplication::applicationDirPath(), 
             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
         );
-        m_section["ImagesDir"] = scan_data_dir.toStdString();
+        m_section["Dataset"]["ImagesDir"] = scan_data_dir.toStdString();
     });
 
     QAction* actSetRobs = createAction(tr("Set RobPoses"), ":/icon/resource/robot.svg");
@@ -447,8 +487,14 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     option_Iter->setCheckable(true);
     optionsAlgor->addAction(option_Regr);
     optionsAlgor->addAction(option_Iter);
-    connect(option_Regr, &QAction::triggered, this, [this](){ m_section["CalibAlgor"] = "Regression";});
-    connect(option_Iter, &QAction::triggered, this, [this](){ m_section["CalibAlgor"] = "Iterative";});
+    connect(option_Regr, &QAction::triggered, this, [this]()
+    { 
+        m_section["Config"]["CalibAlgor"] = "Regression";
+    });
+    connect(option_Iter, &QAction::triggered, this, [this]()
+    { 
+        m_section["Config"]["CalibAlgor"] = "Iterative";
+    });
 
     pannel_mode->addLargeAction(actType);
     pannel_mode->addLargeAction(actTool);
@@ -471,6 +517,26 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     page->addPannel(pannel_mode);
     page->addPannel(pannel_calib);
     page->addPannel(pannel_result);
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    // if m_section is empty, close window directly
+    bool projectNeedsSaving = false;
+    if(!m_section.empty() && !m_section.is_null())
+        projectNeedsSaving = true;  // check if the project needs saving
+
+    if (projectNeedsSaving) {
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Save project?", "Do you want to save the project before closing?",
+                                      QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel);
+        if (reply == QMessageBox::Cancel) {
+            event->ignore();        // ignore the close event
+            return;
+        } else if (reply == QMessageBox::Yes) {
+            // saveProject();       // save the project
+        }
+    }
+    QMainWindow::closeEvent(event);
 }
 
 bool MainWindow::onCalibTriggered()
@@ -497,7 +563,7 @@ bool MainWindow::onCalibTriggered()
     dlg.show();
     QApplication::processEvents();      // Refresh gui
 
-    std::string ImgSaveDir = m_section["ImagesDir"];
+    std::string ImgSaveDir = m_section["Dataset"]["ImagesDir"];
     // Read scan lines data
 	int snap_cnt = 10;
 	std::vector<std::vector<cv::Point3f>> scan_lines;
@@ -523,7 +589,7 @@ bool MainWindow::onCalibTriggered()
     QThread::msleep(800);
 
 	// read robot pose data
-	std::string rob_js_path = m_section["RobPosesFile"];
+	std::string rob_js_path = m_section["Dataset"]["RobPosesFile"];
 	std::vector<Eigen::Vector<float, 6>> vec_rob_pose;
     
     std::ifstream js_file_in(rob_js_path);
@@ -555,7 +621,21 @@ bool MainWindow::onCalibTriggered()
     bool check = hec.CalcCalibError(dis_ctr, err);
 
     Eigen::Matrix4f solution = hec.GetCalcResult();
+    auto solution_vec = hec.GetCalcResultXYZWPR();
 
+    // save result to section
+    m_section["Solution"] = {{"xyzwpr", solution_vec},
+        {"HTM", {
+            {solution(0,0), solution(0,1), solution(0,2), solution(0,3)},
+            {solution(1,0), solution(1,1), solution(1,2), solution(1,3)},
+            {solution(2,0), solution(2,1), solution(2,2), solution(2,3)},
+            {solution(3,0), solution(3,1), solution(3,2), solution(3,3)} }
+        }
+    };
+
+    emit signalUpdateStatusBar("Calibration finished.");
+
+    // printf calibration result
     Eigen::IOFormat fmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
     std::ostringstream stream;
     stream << solution.format(fmt);
@@ -575,77 +655,6 @@ bool MainWindow::onCalibTriggered()
     dlg.exec();
 
     return true;
-}
-
-void MainWindow::onNewSectionTriggered()
-{
-    QWidget* w = new QWidget();
-    QtTreePropertyBrowser* sec_browser = new QtTreePropertyBrowser();
-
-    // config scan data file directory
-    QtPathPropertyManager* imgs_dir_manager = new QtPathPropertyManager(sec_browser);
-    QtPathEditorFactory* imgs_dir_editor = new QtPathEditorFactory(sec_browser);
-    auto pathValue = imgs_dir_manager->addProperty("Images Directory");
-    imgs_dir_manager->setValue(pathValue, "C:\\Users\\Administrator\\Desktop");
-    sec_browser->setFactoryForManager(imgs_dir_manager, imgs_dir_editor);
-    sec_browser->addProperty(pathValue);
-
-    // config robot pose file
-    QtPathPropertyManager* rob_path_manager = new QtPathPropertyManager(sec_browser);
-    QtPathEditorFactory* rob_path_editor = new QtPathEditorFactory(sec_browser);
-    auto pathValue1 = rob_path_manager->addProperty("Robot Data File");
-    rob_path_manager->setValue(pathValue1, "C:\\Users\\Administrator\\Desktop");
-    sec_browser->setFactoryForManager(rob_path_manager, rob_path_editor);
-    sec_browser->addProperty(pathValue1);
-
-    // config calibrate algorithm
-    QtEnumPropertyManager* algor_manager = new QtEnumPropertyManager(sec_browser);
-    QtEnumEditorFactory* algor_editor = new QtEnumEditorFactory(sec_browser);
-    auto enumvalue = algor_manager->addProperty("Algorithm");
-    algor_manager->setEnumNames(enumvalue, QStringList() << "Iterative" << "Regression");
-    sec_browser->setFactoryForManager(algor_manager, algor_editor);
-    sec_browser->addProperty(enumvalue);
-
-    // config calibrate type
-    QtEnumPropertyManager* calib_type_manager = new QtEnumPropertyManager(sec_browser);
-    QtEnumEditorFactory* calib_type_editor = new QtEnumEditorFactory(sec_browser);
-    auto enumvalue1 = calib_type_manager->addProperty("Calibrate type");
-    calib_type_manager->setEnumNames(enumvalue1, QStringList() << "Eye In Hand" << "Eye To Hand");
-    sec_browser->setFactoryForManager(calib_type_manager, calib_type_editor);
-    sec_browser->addProperty(enumvalue1);
-
-    // config calibrate objection 
-    QtGroupPropertyManager* calibObjManager = new QtGroupPropertyManager(sec_browser);
-    QtProperty *item0 = calibObjManager->addProperty("Calibrate Objection");
-
-    QtEnumPropertyManager* ObjNameManager = new QtEnumPropertyManager(sec_browser);
-    QtEnumEditorFactory* ObjNameFactory = new QtEnumEditorFactory(sec_browser);
-    QtProperty* item1 = ObjNameManager->addProperty("Name");
-    ObjNameManager->setEnumNames(item1, QStringList() << "Sphere" << "Block" << "Board");
-    sec_browser->setFactoryForManager(ObjNameManager, ObjNameFactory);
-    item0->addSubProperty(item1);
-
-    QtIntPropertyManager* sphereRadiusManager = new QtIntPropertyManager(sec_browser);
-    QtSpinBoxFactory* sphereRadiusFactory = new QtSpinBoxFactory(sec_browser);
-    QtProperty* item2 = sphereRadiusManager->addProperty("Sphere Radius");
-    sphereRadiusManager->setRange(item2, 0, 100);
-    sec_browser->setFactoryForManager(sphereRadiusManager, sphereRadiusFactory);
-    item0->addSubProperty(item2);
-
-    // QtSpinBoxFactory *calibObjFactory = new QtSpinBoxFactory(sec_browser);
-    // sec_browser->setFactoryForManager(calibObjManager->subIntPropertyManager(), calibObjFactory);
-    sec_browser->addProperty(item0);
-
-    QVBoxLayout* layout = new QVBoxLayout();
-    QPushButton* setbtn = new QPushButton("OK");
-    connect(setbtn, &QPushButton::released, this, [w](){ delete w; });
-    layout->addWidget(sec_browser);
-    layout->addWidget(setbtn);
-
-    w->setLayout(layout);
-    w->resize(800, 400);
-    w->show();
-    QApplication::processEvents();
 }
 
 void MainWindow::onCalibToolTriggered()
@@ -737,7 +746,7 @@ void MainWindow::onActionRemoveAppBtnTriggered(bool b)
 void MainWindow::showScanData(QListWidgetItem* item)
 {
     QString qstr = item->text();
-    std::string ImgSaveDir = m_section["ImagesDir"];
+    std::string ImgSaveDir = m_section["Dataset"]["ImagesDir"];
     std::string ImgPath = ImgSaveDir + "/" + qstr.toUtf8().constData();
     view3DLoadYML(ImgPath);
 }
@@ -789,6 +798,41 @@ void MainWindow::createRightButtonGroup(SARibbonButtonGroupWidget* rightBar)
     QAction* actionHelp = createAction(tr("help"), ":/icon/resource/help.svg");
     connect(actionHelp, &QAction::triggered, this, &MainWindow::onActionHelpTriggered);
     rightBar->addAction(actionHelp);
+}
+
+void MainWindow::createStatusBar()
+{
+    // get screen size
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QSize scrnSize = screen->size();
+
+    // create status bar
+    QStatusBar *statusBar = new QStatusBar(this);
+    this->setStatusBar(statusBar);
+    statusBar->resize(screen->size().width(), 40);
+    statusBar->setStyleSheet("QStatusBar{border: 1px solid black; background-color: #E6E6E6}");
+
+    // add log button
+    QPushButton *logBtn = new QPushButton("Log");
+    logBtn->setFixedWidth(scrnSize.width() * 0.05);
+    logBtn->setFlat(true);
+    logBtn->setStyleSheet("QPushButton {border: 1px; background-color: #D9D9D9} QPushButton:hover {background-color: gray;}");
+    statusBar->addWidget(logBtn);
+
+    // add status widgets
+    QLabel *label = new QLabel("SfrCalib Status:");
+    label->setFixedWidth(scrnSize.width() * 0.15);
+    statusBar->addWidget(label);
+    QLabel *statusLabel = new QLabel();
+    label->setAlignment(Qt::AlignCenter);
+    statusLabel->setFixedWidth(scrnSize.width() * 0.5);
+    statusLabel->setAlignment(Qt::AlignCenter);
+    statusLabel->setText("Ready");
+    statusBar->addWidget(statusLabel);
+
+    connect(this, &MainWindow::signalUpdateStatusBar, this, [=](QString str_msg){
+        statusLabel->setText(str_msg);
+    });
 }
 
 void MainWindow::addSomeOtherAction()
@@ -844,6 +888,147 @@ QAction* MainWindow::createAction(const QString& text, const QString& iconurl)
     return act;
 }
 
+void MainWindow::sectionWidget(bool showWithSection)
+{
+    QWidget* widget_sec = new QWidget();
+    QVBoxLayout* layout = new QVBoxLayout();
+    QtTreePropertyBrowser* sec_browser = new QtTreePropertyBrowser();
+
+    QString default_path = "C:/Users/Administrator/Desktop";
+
+    // add description widget
+    QLabel* lab_desc = new QLabel("Description");
+    QTextEdit* description = new QTextEdit();
+    description->setFixedHeight(150);
+    layout->addWidget(lab_desc);
+    layout->addWidget(description);
+
+    // config scan data file directory
+    QtPathPropertyManager* imgs_dir_manager = new QtPathPropertyManager(sec_browser);
+    QtPathEditorFactory* imgs_dir_editor = new QtPathEditorFactory(sec_browser);
+    auto pathValue = imgs_dir_manager->addProperty("Images Directory");
+    imgs_dir_manager->setValue(pathValue, default_path);
+    sec_browser->setFactoryForManager(imgs_dir_manager, imgs_dir_editor);
+    sec_browser->addProperty(pathValue);
+
+    // config robot pose file
+    QtPathPropertyManager* rob_path_manager = new QtPathPropertyManager(sec_browser);
+    QtPathEditorFactory* rob_path_editor = new QtPathEditorFactory(sec_browser);
+    auto pathValue1 = rob_path_manager->addProperty("Robot Data File");
+    rob_path_manager->setValue(pathValue1, default_path);
+    sec_browser->setFactoryForManager(rob_path_manager, rob_path_editor);
+    sec_browser->addProperty(pathValue1);
+
+    // config calibrate algorithm
+    QtEnumPropertyManager* algor_manager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* algor_editor = new QtEnumEditorFactory(sec_browser);
+    auto enumvalue = algor_manager->addProperty("Algorithm");
+    algor_manager->setEnumNames(enumvalue, QStringList() << "Iterative" << "Regression");
+    sec_browser->setFactoryForManager(algor_manager, algor_editor);
+    sec_browser->addProperty(enumvalue);
+
+    // config calibrate type
+    QtEnumPropertyManager* type_manager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* type_editor = new QtEnumEditorFactory(sec_browser);
+    auto enumvalue1 = type_manager->addProperty("Calibrate type");
+    type_manager->setEnumNames(enumvalue1, QStringList() << "EyeInHand" << "EyeToHand");
+    sec_browser->setFactoryForManager(type_manager, type_editor);
+    sec_browser->addProperty(enumvalue1);
+
+    // config calibrate objection 
+    QtGroupPropertyManager* calibObjManager = new QtGroupPropertyManager(sec_browser);
+    QtProperty *item0 = calibObjManager->addProperty("Calibrate Objection");
+
+    QtEnumPropertyManager* ObjNameManager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* ObjNameFactory = new QtEnumEditorFactory(sec_browser);
+    QtProperty* item1 = ObjNameManager->addProperty("Name");
+    ObjNameManager->setEnumNames(item1, QStringList() << "Sphere" << "Block" << "Board");
+    sec_browser->setFactoryForManager(ObjNameManager, ObjNameFactory);
+    item0->addSubProperty(item1);
+
+    QtIntPropertyManager* sphereRadiusManager = new QtIntPropertyManager(sec_browser);
+    QtSpinBoxFactory* sphereRadiusFactory = new QtSpinBoxFactory(sec_browser);
+    QtProperty* item2 = sphereRadiusManager->addProperty("Sphere Radius");
+    sphereRadiusManager->setRange(item2, 0, 100);
+    sec_browser->setFactoryForManager(sphereRadiusManager, sphereRadiusFactory);
+    item0->addSubProperty(item2);
+
+    // QtSpinBoxFactory *calibObjFactory = new QtSpinBoxFactory(sec_browser);
+    // sec_browser->setFactoryForManager(calibObjManager->subIntPropertyManager(), calibObjFactory);
+    sec_browser->addProperty(item0);
+    layout->addWidget(sec_browser);
+
+    // Load section to section Widget
+    if(showWithSection && !m_section.empty()){
+        std::string desc = m_section["Description"]["Label"];
+        description->setText(QString::fromStdString(desc));
+
+        std::string img_dir = m_section["Dataset"]["ImagesDir"];
+        imgs_dir_manager->setValue(pathValue, QString::fromStdString(img_dir));
+
+        std::string rob_path = m_section["Dataset"]["RobPosesFile"];
+        rob_path_manager->setValue(pathValue1, QString::fromStdString(rob_path));
+
+        std::string calib_type = m_section["Config"]["CalibType"];
+        if(calib_type == "EyeInHand")
+            type_manager->setValue(enumvalue1, 0);
+        else
+            type_manager->setValue(enumvalue1, 1);
+        
+        std::string calib_algor = m_section["Config"]["CalibAlgor"];
+        if(calib_algor == "Iterative")
+            algor_manager->setValue(enumvalue, 0);
+        else
+            algor_manager->setValue(enumvalue, 0);
+    }
+
+    // save calib config to section 
+    QHBoxLayout* v_layout = new QHBoxLayout();
+    QPushButton* setBtn = new QPushButton("OK");
+    connect(setBtn, &QPushButton::released, this, [=]()
+    {
+        // Clear m_section before save new config
+        m_section.clear();
+
+        // section: Description
+        QDateTime currentDateTime = QDateTime::currentDateTime();
+        QString currentTimeString = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
+        m_section["Description"] = { 
+            {"Label", description->toPlainText().toStdString()},
+            {"SaveTime", currentTimeString.toStdString()}
+        };
+
+        // section: Dataset
+        auto imgs_dir = imgs_dir_manager->value(pathValue);
+        auto rob_pose_file = rob_path_manager->value(pathValue1);
+        m_section["Dataset"] = {
+            {"ImagesDir", imgs_dir.toStdString()},
+            {"RobPosesFile", rob_pose_file.toStdString()}
+        };
+
+        // section: Config
+        auto id_algor = algor_manager->value(enumvalue);
+        auto id_type = type_manager->value(enumvalue1);
+        m_section["Config"] = {
+            {"CalibAlgor", algor_manager->enumNames(enumvalue).at(id_algor).toStdString()},
+            {"CalibType", type_manager->enumNames(enumvalue1).at(id_type).toStdString()}
+        };
+        // m_section["Solution"] = { {"HTM", }, {"xyzwpr", } },
+
+        delete widget_sec; 
+    });
+    QPushButton* cancelBtn = new QPushButton("Cancel");
+    connect(cancelBtn, &QPushButton::released, this, [=](){ delete widget_sec; });
+    v_layout->addWidget(setBtn);
+    v_layout->addWidget(cancelBtn);
+    layout->addLayout(v_layout);
+
+    widget_sec->setLayout(layout);
+    widget_sec->setMinimumSize(1000, 600);
+    widget_sec->show();
+    QApplication::processEvents();
+}
+
 void MainWindow::loadQssStyle(SARibbonBar* ribbon)
 {
     QFile f(":/theme/resource/default.qss");
@@ -869,7 +1054,16 @@ bool MainWindow::view3DLoadYML(std::string img_path)
     cv::FileStorage fs(img_path, cv::FileStorage::READ);
     fs["scan_line"] >> pointCloud;
     fs.release();
-    m_viewer3d->displayPoints(pointCloud, 4);
+    m_viewer3d->pointsDisplay(pointCloud, 4);
+
+    return true;
+}
+
+bool MainWindow::view3DLoadStl(std::string stl_path)
+{
+    m_viewer3d->RenderWinReset();
+
+    m_viewer3d->stlDiaplay(stl_path);
 
     return true;
 }

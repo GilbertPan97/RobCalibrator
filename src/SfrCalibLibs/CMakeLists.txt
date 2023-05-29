@@ -1,3 +1,4 @@
+set(CMAKE_INSTALL_PREFIX "C:/Users/GilbertPan/Desktop/SfrCalib")
 
 add_subdirectory(QtPropertyBrowser)
 

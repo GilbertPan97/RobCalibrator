@@ -52,7 +52,9 @@ public:
         Qt::WindowFlags f = Qt::WindowFlags());
     ~QVtkViewer() override;
 
-    bool displayPoints(std::vector<cv::Point3f> pntCloud, int pntSize);
+    bool pointsDisplay(std::vector<cv::Point3f> pntCloud, int pntSize);
+    bool stlDiaplay(std::string stl_path);
+
     void RenderWinReset();
 
     //@{

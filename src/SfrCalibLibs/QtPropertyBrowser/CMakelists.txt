@@ -34,6 +34,16 @@ add_library(QtPropertyBrowser ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
 
+if(QT_VERSION_MAJOR STREQUAL "5")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON)
+elseif(QT_VERSION_MAJOR STREQUAL "6")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+endif()
+
 target_include_directories(QtPropertyBrowser PUBLIC
     ${PROJECT_BINARY_DIR}
     ${Qt5Core_INCLUDE_DIRS}
@@ -69,10 +79,10 @@ set_target_properties(QtPropertyBrowser PROPERTIES
 )
 
 install(TARGETS QtPropertyBrowser
-  RUNTIME DESTINATION ${INSTALL_DIR}/bin/$<CONFIG>/QtPropertyBrowser
-  LIBRARY DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtPropertyBrowser
-  ARCHIVE DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtPropertyBrowser
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
 
 install(FILES ${HEADER_FILES}
-        DESTINATION ${INSTALL_DIR}/include/QtPropertyBrowser)
+        DESTINATION include/QtPropertyBrowser)

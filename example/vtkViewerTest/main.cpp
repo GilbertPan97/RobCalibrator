@@ -3,7 +3,11 @@
 #include <QVTKRenderWidget.h>
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
+#include <vtkSTLReader.h>
 #include <vtkActor.h>
+#include <vtkAxesActor.h>
+#include <vtkProperty2D.h>
+#include <vtkCaptionActor2D.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkPolyDataMapper.h>
@@ -29,7 +33,6 @@
 
 VTK_MODULE_INIT(vtkRenderingOpenGL2);   // VTK was built with vtkRenderingOpenGL2
 VTK_MODULE_INIT(vtkInteractionStyle);
-
 
 void setAxesSystem(vtkRenderWindowInteractor* iren)
 {
@@ -86,25 +89,25 @@ void setAxesSystem(vtkRenderWindowInteractor* iren)
     axesActor->GetYAxisTipProperty()->SetColor(0, 1, 0);
     axesActor->GetZAxisShaftProperty()->SetColor(0, 0, 1);
     axesActor->GetZAxisTipProperty()->SetColor(0, 0, 1);
-    // axesActor->GetZAxisCaptionActor2D()->GetProperty()->SetColor(1, 1, 1);
+    axesActor->GetZAxisCaptionActor2D()->GetProperty()->SetColor(1, 1, 1);
     axesActor->SetAxisLabels(1);
     axesActor->SetTotalLength(1.5, 1.5, 1.5);
     axesActor->SetCylinderRadius(0.500 * axesActor->GetCylinderRadius());
     axesActor->SetConeRadius(1.025 * axesActor->GetConeRadius());
     axesActor->SetSphereRadius(1.500 * axesActor->GetSphereRadius());
 
-    // vtkTextProperty* tprop = axesWidget->GetXAxisCaptionActor2D()->GetCaptionTextProperty();
-    // tprop->ItalicOn();
-    // tprop->ShadowOn();
-    // tprop->SetFontFamilyToTimes();
-    // axesWidget->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->ShallowCopy(tprop);
-    // axesWidget->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->ShallowCopy(tprop);
+    vtkTextProperty* tprop = axesActor->GetXAxisCaptionActor2D()->GetCaptionTextProperty();
+    tprop->ItalicOn();
+    tprop->ShadowOn();
+    tprop->SetFontFamilyToTimes();
+    axesActor->GetYAxisCaptionActor2D()->GetCaptionTextProperty()->ShallowCopy(tprop);
+    axesActor->GetZAxisCaptionActor2D()->GetCaptionTextProperty()->ShallowCopy(tprop);
 
     vtkSmartPointer<vtkPropAssembly> assembly = vtkSmartPointer<vtkPropAssembly>::New();
     assembly->AddPart(axesActor);
     assembly->AddPart(cube);
     axesWidget->SetOutlineColor(1, 1, 1);
-    axesWidget->SetViewport(0.0, 0.0, 0.3, 0.3);
+    axesWidget->SetViewport(0.0, 0.0, 0.2, 0.2);
     axesWidget->SetOrientationMarker(assembly);
     axesWidget->SetInteractor(iren);
 
@@ -140,10 +143,14 @@ int main(int argc, char *argv[])
     fs1["scan_line"] >> pointCloud;
     fs1.release();
 
+    // build STL file reader
+    vtkSmartPointer<vtkSTLReader> stlReader = vtkSmartPointer<vtkSTLReader>::New();
+    stlReader->SetFileName("../../data/ScanData/SR7140.STL");
+    stlReader->Update();
+
     int invalid_pnts = 0;
     for (const auto& point : pointCloud){
-        if(!isnan(point.x) && !isnan(point.y) 
-            && !isnan(point.z)){
+        if(!isnan(point.x) && !isnan(point.y) && !isnan(point.z)){
             vtkIdType id = points->InsertNextPoint(point.x, point.y, point.z);
             cells->InsertNextCell(1, &id);
         }
@@ -162,7 +169,9 @@ int main(int argc, char *argv[])
 
     // Set mapper and actor, and set imput data to mapper
     vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
-    mapper->SetInputData(polyData);
+    // mapper->SetInputData(polyData);     // point cloud
+    mapper->SetInputConnection(stlReader->GetOutputPort());     // stl model
+
     vtkActor *actor = vtkActor::New();
     actor->SetMapper(mapper);
 
@@ -184,25 +193,23 @@ int main(int argc, char *argv[])
     });
 
     // test iren
+    vtkInteractorStyleTrackballCamera *style = vtkInteractorStyleTrackballCamera::New();
     if (!renderWidget->renderWindow()->GetInteractor()){
         // create a default interactor
         vtkNew<QVTKInteractor> iren;
         // iren->SetUseTDx(this->UseTDx);
         renderWidget->renderWindow()->SetInteractor(iren);
-        vtkInteractorStyleTrackballCamera *style = vtkInteractorStyleTrackballCamera::New();
         iren->SetInteractorStyle(style);
         setAxesSystem(iren);
     }
     else{
         auto iren = renderWidget->renderWindow()->GetInteractor();
-        vtkInteractorStyleTrackballCamera *style = vtkInteractorStyleTrackballCamera::New();
         iren->SetInteractorStyle(style);
-
         setAxesSystem(iren);
     }
 
     w->resize(800, 800);
-    w->show(); // 显示 QWidget
+    w->show();
 
     return app.exec();
 

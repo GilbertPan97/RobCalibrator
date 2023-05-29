@@ -20,6 +20,16 @@ add_library(QtImgviewer ${HEADER_FILES} ${SRC_FILES} ${QRC_FILES})
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
 
+if(QT_VERSION_MAJOR STREQUAL "5")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON)
+elseif(QT_VERSION_MAJOR STREQUAL "6")
+    set_target_properties(${library_name} PROPERTIES
+        CXX_STANDARD 17
+        CXX_STANDARD_REQUIRED ON)
+endif()
+
 # find opencv package: used for QtImgviewer
 find_package(OpenCV REQUIRED HINTS ${THIRD_PARTY})
 
@@ -41,7 +51,10 @@ set_target_properties(QtImgviewer PROPERTIES
 )
 
 install(TARGETS QtImgviewer
-  RUNTIME DESTINATION ${INSTALL_DIR}/bin/$<CONFIG>/QtImgviewer
-  LIBRARY DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtImgviewer
-  ARCHIVE DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/QtImgviewer
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
+
+install(FILES ${HEADER_FILES}
+        DESTINATION include/QtImgviewer)

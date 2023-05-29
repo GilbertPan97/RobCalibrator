@@ -1,10 +1,14 @@
-﻿#ifndef MAINWINDOW_H
+﻿#ifdef _WIN32
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
+#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #include "SARibbonMainWindow.h"
 #include "QVtkViewer.h"
 #include "DockManager.h"
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
+#include "startupprogresswindow.h"
 
 #include <QVTKOpenGLNativeWidget.h>
 #include <nlohmann/json.hpp>
@@ -35,19 +39,26 @@ private:
     void createCategoryCalib(SARibbonCategory* page);
     void createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar);
     void createRightButtonGroup(SARibbonButtonGroupWidget* rightBar);
+    void createStatusBar();
     void addSomeOtherAction();
     QAction* createAction(const QString& text, const QString& iconurl, const QString& objName);
     QAction* createAction(const QString& text, const QString& iconurl);
 
+    void sectionWidget(bool showWithSection = false);
+
     void loadQssStyle(SARibbonBar* ribbon);
     bool view3DLoadYML(std::string img_path);
+    bool view3DLoadStl(std::string stl_path);
 
 signals:
     void signalUpdateBrowser();
+    void signalUpdateStatusBar(QString message);
+
+protected:
+    void closeEvent(QCloseEvent *event);
 
 private slots:
     bool onCalibTriggered();
-    void onNewSectionTriggered();
     void onCalibToolTriggered();
     void onActionCustomizeAndSaveTriggered(bool b);
     void onActionHelpTriggered();
@@ -59,6 +70,7 @@ private slots:
     void restoreState();
 
 private:
+    StartupProgressWindow* m_startupProgressWindow;
     SARibbonCustomizeWidget* m_customizeWidget;
 
     QVtkViewer* m_viewer3d;
@@ -67,7 +79,7 @@ private:
 
     ads::CDockManager* m_dockManager;
 
-    nlohmann::json m_section;
+    nlohmann::json m_section;       // calibration section
     SARibbonActionsManager* m_actMgr;
     int m_actionTagText;
     int m_actionTagWithIcon;

@@ -19,10 +19,6 @@ source_group("Source Files" FILES ${SRC_FILES})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_library(Calibrator ${HEADER_FILES} ${SRC_FILES})
 
-# # find qt package: for all component
-# find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
-# find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
-
 # find opencv package: used for Calibrator
 find_package(OpenCV REQUIRED HINTS ${THIRD_PARTY})
 
@@ -43,9 +39,13 @@ set_target_properties(Calibrator PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
     RUNTIME_OUTPUT_DIRECTORY "${SFRCALIB_BIN_DIR}"
 )
+message(STATUS "Install dir is: ${CMAKE_INSTALL_PREFIX}")
 
 install(TARGETS Calibrator
-  RUNTIME DESTINATION ${INSTALL_DIR}/bin/$<CONFIG>/Calibrator
-  LIBRARY DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/Calibrator
-  ARCHIVE DESTINATION ${INSTALL_DIR}/lib/$<CONFIG>/Calibrator
+  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
+
+install(FILES ${HEADER_FILES}
+        DESTINATION include/Calibrator)

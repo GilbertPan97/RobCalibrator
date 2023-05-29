@@ -1,7 +1,0 @@
-{
-    "CalibAlgor": "Iterative",
-    "CalibType": "EyeInHand",
-    "ImagesDir": "C:/Users/GilbertPan/Desktop/RobLab/data/ScanData",
-    "RobPosesFile": "C:/Users/GilbertPan/Desktop/RobLab/data/ScanData/RobPoses.rob",
-    "SaveTime": "2023-05-15 15:13:10"
-}

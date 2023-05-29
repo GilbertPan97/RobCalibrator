@@ -14,8 +14,8 @@ project(SfrCalib VERSION ${SFRCALIB_VERSION})
 option(BUILD_EXAMPLES "build the examples" ON)
 option(BUILD_DESIGNERPLUGIN "build the Designer Plugin" OFF)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_DEBUG_POSTFIX "d" CACHE STRING "add a postfix, usually d on windows")
 set(CMAKE_RELEASE_POSTFIX "" CACHE STRING "add a postfix, usually empty on windows")
 set(CMAKE_RELWITHDEBINFO_POSTFIX "rd" CACHE STRING "add a postfix, usually empty on windows")
@@ -25,6 +25,13 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4819")
     add_compile_options(/bigobj)    # add big obj option to avoid calibrator build fail
 endif()
+
+# # cmd not visible when run exec
+# if(WIN32)
+#   set(CMAKE_EXE_LINKER_FLAGS "/SUBSYSTEM:WINDOWS")
+# elseif(UNIX AND NOT APPLE)
+#   set(CMAKE_EXE_LINKER_FLAGS "-ldl")
+# endif()
 
 include(CPack)
 # platform check

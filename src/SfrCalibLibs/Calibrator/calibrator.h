@@ -68,6 +68,8 @@ namespace Calibrator
 
             Eigen::Matrix4f GetCalcResult();
 
+            Eigen::Vector<float, 6> GetCalcResultXYZWPR();
+
             bool CalcCalibError(std::vector<float>& dist_ctr_pnts, float calib_error);
 
         private:

@@ -113,16 +113,12 @@ write_basic_package_version_file(
     VERSION ${VERSION_SHORT}
     COMPATIBILITY SameMajorVersion
 )
+
 install(FILES ${ads_HEADERS}
     DESTINATION include/${library_name}
     COMPONENT headers
 )
-install(FILES
-    "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../gnu-lgpl-v2.1.md"
-    DESTINATION license/ads
-    COMPONENT license
-)
+
 install(TARGETS ${library_name}
     EXPORT adsTargets
     RUNTIME DESTINATION bin
