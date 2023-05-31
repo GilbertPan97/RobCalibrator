@@ -154,7 +154,7 @@ MainWindow::MainWindow(QWidget* par) :
     // add 2D & 3D viewer, and QtPropertyBrowser
     m_dockManager = new ads::CDockManager(this);
     auto DockWidget1 = createQtVTKviewerDockWidget();
-    auto DockWidget2 = createQtImgviewerDockWidget();
+    auto DockWidget2 = createQtChartviewerDockWidget();
     auto DockWidget4 = createDataBrowserDockWidget();    // DataBrowser should build before PropertyBrowser
     auto DockWidget3 = createPropertyBrowser();
 
@@ -195,6 +195,8 @@ MainWindow::MainWindow(QWidget* par) :
 
     // Test stl model load
     // this->view3DLoadStl("../../data/ScanData/SR7140.STL");
+    // Test yml data chart display
+    // this->view2DLoadYML("../../data/ScanData/1_3C_line.yml");
 }
 
 ads::CDockWidget* MainWindow::createQtVTKviewerDockWidget()
@@ -211,12 +213,25 @@ ads::CDockWidget* MainWindow::createQtVTKviewerDockWidget()
 ads::CDockWidget* MainWindow::createQtImgviewerDockWidget()
 {
     ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("2D Viewer"));
-    m_viewer2d = new CImageViewer();
-    DockWidget->setWidget(m_viewer2d, ads::CDockWidget::ForceNoScrollArea);
+    m_ImgViewer = new CImageViewer();
+    DockWidget->setWidget(m_ImgViewer, ads::CDockWidget::ForceNoScrollArea);
     DockWidget->setIcon(svgIcon(":/icon/resource/photo.svg"));
     auto ToolBar = DockWidget->createDefaultToolBar();
-    ToolBar->addActions(m_viewer2d->actions());
-    m_viewer2d->loadFile("./RobHand.jpeg");
+    ToolBar->addActions(m_ImgViewer->actions());
+
+    m_ImgViewer->loadFile("./RobHand.jpeg");
+
+    return DockWidget;
+}
+
+ads::CDockWidget* MainWindow::createQtChartviewerDockWidget()
+{
+    ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("2D Viewer"));
+    m_ChartViewer = new ChartViewer();
+    DockWidget->setWidget(m_ChartViewer, ads::CDockWidget::ForceNoScrollArea);
+    DockWidget->setIcon(svgIcon(":/icon/resource/photo.svg"));
+    auto ToolBar = DockWidget->createDefaultToolBar();
+    ToolBar->addActions(m_ChartViewer->actions());
 
     return DockWidget;
 }
@@ -569,7 +584,7 @@ bool MainWindow::onCalibTriggered()
 	std::vector<std::vector<cv::Point3f>> scan_lines;
 	for (size_t i = 0; i < snap_cnt; i++){
 		// read from yml file
-		std::string file_path = ImgSaveDir + "/" + std::to_string(i + 1) +"_3C_line.yml";
+		std::string file_path = ImgSaveDir + "/" + std::to_string(i + 1) + "_3C_line.yml";
 
 		std::vector<cv::Point3f> scan_line;
 		cv::FileStorage fs(file_path, cv::FileStorage::READ);
@@ -1064,6 +1079,26 @@ bool MainWindow::view3DLoadStl(std::string stl_path)
     m_viewer3d->RenderWinReset();
 
     m_viewer3d->stlDiaplay(stl_path);
+
+    return true;
+}
+
+bool MainWindow::view2DLoadYML(std::string yml_path)
+{
+    std::vector<cv::Point3f> scan_line;
+	cv::FileStorage fs(yml_path, cv::FileStorage::READ);
+	fs["scan_line"] >> scan_line;
+    fs.release();
+
+    std::vector<cv::Point2f> scan_line_2d;
+    for(const cv::Point3f pnt: scan_line){
+        if(pnt.x != NULL && pnt.z != NULL)
+            scan_line_2d.push_back({pnt.x, pnt.z});
+        else
+            continue;
+    }
+
+    m_ChartViewer->setPointCloud(scan_line_2d);
 
     return true;
 }

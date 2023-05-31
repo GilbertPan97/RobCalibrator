@@ -9,6 +9,7 @@
 #include "DockWidget.h"
 #include "DockAreaWidget.h"
 #include "startupprogresswindow.h"
+#include "ChartViewer.h"
 
 #include <QVTKOpenGLNativeWidget.h>
 #include <nlohmann/json.hpp>
@@ -34,6 +35,7 @@ public:
 private:
     ads::CDockWidget* createQtVTKviewerDockWidget();
     ads::CDockWidget* createQtImgviewerDockWidget();
+    ads::CDockWidget* createQtChartviewerDockWidget();
     ads::CDockWidget* createPropertyBrowser();
     ads::CDockWidget* createDataBrowserDockWidget();
     void createCategoryCalib(SARibbonCategory* page);
@@ -49,6 +51,7 @@ private:
     void loadQssStyle(SARibbonBar* ribbon);
     bool view3DLoadYML(std::string img_path);
     bool view3DLoadStl(std::string stl_path);
+    bool view2DLoadYML(std::string yml_path);
 
 signals:
     void signalUpdateBrowser();
@@ -74,7 +77,8 @@ private:
     SARibbonCustomizeWidget* m_customizeWidget;
 
     QVtkViewer* m_viewer3d;
-    CImageViewer* m_viewer2d;
+    CImageViewer* m_ImgViewer;
+    ChartViewer* m_ChartViewer;
     QListWidget* m_dataBrowser;
 
     ads::CDockManager* m_dockManager;

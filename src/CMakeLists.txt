@@ -36,7 +36,7 @@ set(SRC_FILES
 
 set(QRC_FILES 
     mainwindow.qrc 
-    SfrCalibLibs/QtImgViewer/QtImgViewer.qrc
+    SfrCalibLibs/QtDataViewer/QtDataViewer.qrc
     SfrCalibLibs/SARibbonBar/resource.qrc
 )
 
@@ -46,8 +46,7 @@ add_executable(${SFRCALIB_MAINWIN} ${SRC_FILES} ${HEADER_FILES} ${QRC_FILES})
 target_include_directories(${SFRCALIB_MAINWIN}  PRIVATE 
                     "${PROJECT_BINARY_DIR}"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/SARibbonBar"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtVTKviewer"
-                    "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtImgViewer"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtDataViewer"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtPropertyBrowser"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/Calibrator"
                     ${EIGEN3_INCLUDE_DIRS})
@@ -56,8 +55,7 @@ message(STATUS "Sfr calibration bin dir is: ${SFRCALIB_BIN_NAME}")
 target_link_libraries(${SFRCALIB_MAINWIN} PRIVATE 
                       QtAdvancedDocking
                       QtPropertyBrowser
-                      QtVTKviewer
-                      QtImgviewer
+                      QtDataViewer
                       SARibbonBar
                       Calibrator)
 target_link_libraries(${SFRCALIB_MAINWIN} PUBLIC
