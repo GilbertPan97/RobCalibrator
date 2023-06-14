@@ -6,21 +6,17 @@ ChartViewer::ChartViewer(QWidget *parent) : QChartView(parent)
 {
     // create X and Y axis
     axisX = new QValueAxis;
-    axisX->setTitleText("X");
     axisY = new QValueAxis;
+    axisX->setTitleText("X");
     axisY->setTitleText("Z");       // 3d scanner coordination Y = 0
 
     chart()->addAxis(axisX, Qt::AlignBottom);       // add X axis to chart
     chart()->addAxis(axisY, Qt::AlignLeft);
-
     chart()->setTheme(QChart::ChartThemeBlueNcs);
-    QPen pen(QRgb(0xd18952));
-    pen.setWidth(3);
 
-    // Set pen on chart object
-    chart()->legend()->setPen(pen);
-    chart()->legend()->setBrush(QBrush(QColor(255, 255, 255, 200)));
-    chart()->legend()->setAlignment(Qt::AlignTop);
+    QPen pen(Qt::darkGray);
+    pen.setWidth(2);
+    chart()->setBackgroundPen(pen);
 
     // Set up chart viewer
     setRenderHint(QPainter::Antialiasing);
@@ -40,8 +36,7 @@ ChartViewer::ChartViewer(QWidget *parent) : QChartView(parent)
     verticalScrollBar()->setSingleStep(10);
 
     // create point cloud series
-    pointSeries = new QScatterSeries;
-    pointSeries->setMarkerSize(8.0);      // set points size
+    pointSeries = new QScatterSeries();
 
     chart()->addSeries(pointSeries);      // add to chart
     pointSeries->attachAxis(axisX);
@@ -54,9 +49,14 @@ void ChartViewer::setPointCloud(const std::vector<cv::Point2f> &pointCloud)
 
     // add new point cloud data
     for (const auto &point : pointCloud)
-    {
         pointSeries->append(point.x, point.y);
-    }
+
+    QPen pen(Qt::gray);      // Create a pen object with a transparent color
+    pen.setWidth(1);
+    QColor skyBlue(0x87, 0xCE, 0xEB);
+    pointSeries->setPen(pen);       // Set the pen object for the point series
+    pointSeries->setBrush(QBrush(skyBlue));
+    pointSeries->setMarkerSize(7);
 
     autoFit();
 }
@@ -66,19 +66,35 @@ void ChartViewer::autoFit()
     if(pointSeries->count() == 0)
         return;
     
-    double minX = FLT_MAX, maxX = -FLT_MAX, minY = FLT_MAX, maxY = -FLT_MAX;
     QVector<QPointF> pointCloud = pointSeries->pointsVector();
-    for (auto &point : pointCloud)
-    {
-        minX = std::min(minX, point.x());
-        maxX = std::max(maxX, point.x());
-        minY = std::min(minY, point.y());
-        maxY = std::max(maxY, point.y());
+    QPointF center;
+    for(const auto& point : pointCloud) {
+        center += point;
     }
+    center /= pointCloud.size();
 
+    // find the max X and Y from point to center
+    double maxXDist = 0.0, maxYDist = 0.0, maxDistSquared = 0.0;
+    for (const auto& point : pointCloud) {
+        double dx = point.x() - center.x();
+        double dy = point.y() - center.y();
+        if (std::abs(dx) > std::abs(maxXDist)) 
+            maxXDist = std::abs(dx);
+        
+        if (std::abs(dy) > std::abs(maxYDist))
+            maxYDist = std::abs(dy);
+    }
+    
     // Set the axis ranges
-    this->chart()->axisX()->setRange(minX - 10, maxX + 10);
-    this->chart()->axisY()->setRange(minY - 10, maxY + 10);
+    float maxAxisDist = std::max(maxXDist, maxYDist);
+    this->chart()->axisX()->setRange(center.x() - maxAxisDist - 10, center.x() + maxAxisDist + 10);
+    this->chart()->axisY()->setRange(center.y() - maxAxisDist - 10, center.y() + maxAxisDist + 10);
+    
+    // connect(this, &QWidget::resizeEvent, this, [=](){
+    //     float radio = this->size().height() / this->size().width();
+    //     float x_range = maxAxisDist;
+    //     float y_range = maxAxisDist * radio;
+    // }); 
 }
 
 void ChartViewer::wheelEvent(QWheelEvent *event)

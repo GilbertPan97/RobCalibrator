@@ -48,6 +48,10 @@ namespace Calibrator
         Eigen::Matrix3f rodrigues(const Eigen::Vector3f& v);
 
         std::vector<Eigen::Vector3f> toEigenPoints(const std::vector<cv::Point3f>& points);
+
+        std::vector<cv::Point3f> to3D(std::vector<cv::Point2f> points_2d);
+
+        std::vector<cv::Point2f> to2D(std::vector<cv::Point3f> point_3d);
     }
 }
 

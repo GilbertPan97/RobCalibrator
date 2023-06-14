@@ -14,6 +14,8 @@ QT_CHARTS_USE_NAMESPACE
 
 class ChartViewer : public QChartView
 {
+    Q_OBJECT
+
 public:
     ChartViewer(QWidget *parent = nullptr);
 

@@ -148,6 +148,24 @@ namespace Calibrator
 
             return result;
         }
+
+        std::vector<cv::Point3f> to3D(std::vector<cv::Point2f> points_2d){
+            std::vector<cv::Point3f> points_3d;
+
+            for(const cv::Point2f pnt2d: points_2d)
+                points_3d.push_back({pnt2d.x, 0, pnt2d.y});
+
+            return points_3d;
+        }
+
+        std::vector<cv::Point2f> to2D(std::vector<cv::Point3f> point_3d){
+            std::vector<cv::Point2f> points_2d;
+
+            for(const cv::Point3f pnt3d: point_3d)
+                points_2d.push_back({pnt3d.x, pnt3d.z});
+
+            return points_2d;
+        }
     }
 
 }

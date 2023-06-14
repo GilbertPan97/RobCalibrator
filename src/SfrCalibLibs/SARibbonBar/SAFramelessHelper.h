@@ -1,7 +1,6 @@
 ﻿#ifndef SAFRAMELESSHELPER_H
 #define SAFRAMELESSHELPER_H
 
-
 #include "SARibbonGlobal.h"
 #include <QObject>
 

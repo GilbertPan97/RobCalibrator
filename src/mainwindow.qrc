@@ -33,6 +33,10 @@
 		<file>resource/loading.gif</file>
         <file>resource/loading1.jfif</file>
 	</qresource>
+	
+	<qresource prefix="/background">
+		<file>resource/RobHand.jpeg</file>
+	</qresource>
     
     <qresource prefix="/theme">
         <file>resource/default.qss</file>

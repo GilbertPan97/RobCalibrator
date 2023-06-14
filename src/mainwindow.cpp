@@ -73,6 +73,7 @@
 #include <QSettings>
 #include <QAction>
 #include <QMenu>
+#include <QSlider>
 #include <QDateTime>
 #include <QStatusBar>
 #include <QDebug>
@@ -86,6 +87,7 @@
 #include <QTextStream>
 #include <QFontComboBox>
 #include <QLabel>
+#include <QGroupBox>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -151,6 +153,12 @@ MainWindow::MainWindow(QWidget* par) :
     createCategoryCalib(cat_3dScanner);
     ribbon->addCategoryPage(cat_3dScanner);
 
+    // TODO: test qss
+    SARibbonCategory* test = new SARibbonCategory();
+    test->setCategoryName(tr("   test   "));
+    test->setObjectName(("test"));
+    ribbon->addCategoryPage(test);
+
     // add 2D & 3D viewer, and QtPropertyBrowser
     m_dockManager = new ads::CDockManager(this);
     auto DockWidget1 = createQtVTKviewerDockWidget();
@@ -164,11 +172,8 @@ MainWindow::MainWindow(QWidget* par) :
     auto CenterDockArea = m_dockManager->addDockWidget(ads::BottomDockWidgetArea, DockWidget4, ViewerDockArea);
     auto RightDockArea = m_dockManager->addDockWidget(ads::RightDockWidgetArea, DockWidget3);
 
-    m_dockManager->setSplitterSizes(CenterDockArea, {800/10 * 8, 800/10 * 2});
-    m_dockManager->setSplitterSizes(RightDockArea, {1200/10 * 7, 1200/10 * 3});
-
-    qDebug() << "Splitter size is:" << m_dockManager->splitterSizes(CenterDockArea);
-    qDebug() << "Splitter size is:" << m_dockManager->splitterSizes(RightDockArea);
+    m_dockManager->setSplitterSizes(CenterDockArea, {800/10 * 8, 800/10 * 3});
+    m_dockManager->setSplitterSizes(RightDockArea, {1280/10 * 7, 1280/10 * 3});
     
     this->setCentralWidget(m_dockManager);
 
@@ -195,8 +200,6 @@ MainWindow::MainWindow(QWidget* par) :
 
     // Test stl model load
     // this->view3DLoadStl("../../data/ScanData/SR7140.STL");
-    // Test yml data chart display
-    // this->view2DLoadYML("../../data/ScanData/1_3C_line.yml");
 }
 
 ads::CDockWidget* MainWindow::createQtVTKviewerDockWidget()
@@ -298,9 +301,10 @@ ads::CDockWidget* MainWindow::createPropertyBrowser()
 
     // build layout to DockWidget
     QVBoxLayout* v_layout = new QVBoxLayout(w);
+    QWidget* w_panel = createControlPanel();         // control panel widget
 
-    // add widget to layout
-    v_layout->addWidget(editor, 1);
+    v_layout->addWidget(w_panel);
+    v_layout->addWidget(editor);
 
     DockWidget->setWidget(w);
     DockWidget->setIcon(svgIcon(":/icon/resource/date_range.svg"));
@@ -309,12 +313,115 @@ ads::CDockWidget* MainWindow::createPropertyBrowser()
     return DockWidget;
 }
 
+QWidget* MainWindow::createControlPanel()
+{
+    QWidget *w = new QWidget();
+
+    // Noise filter
+    QGroupBox *gBoxNoise = new QGroupBox("Noise Filter", w);
+    QGridLayout *grid_layout = new QGridLayout(w);
+    grid_layout->setAlignment(Qt::AlignCenter);
+    gBoxNoise->setLayout(grid_layout);
+
+    QLabel *lab00 = new QLabel(w);
+    lab00->setText("Eps:");
+    QSlider *slider00 = new QSlider(Qt::Horizontal, w);
+    QLineEdit *lineEdit00 = new QLineEdit(w);
+    slider00->setRange(0, 10);
+    lineEdit00->setFixedWidth(120);
+    grid_layout->addWidget(lab00, 0, 0);
+    grid_layout->addWidget(slider00, 0, 1);
+    grid_layout->addWidget(lineEdit00, 0, 2);
+
+    QLabel *lab01 = new QLabel(w);
+    lab01->setText("Minimum Points:");
+    QSlider *slider01 = new QSlider(Qt::Horizontal, w);
+    QLineEdit *lineEdit01 = new QLineEdit(w);
+    lineEdit01->setFixedWidth(120);
+    grid_layout->addWidget(lab01, 1, 0);
+    grid_layout->addWidget(slider01, 1, 1);
+    grid_layout->addWidget(lineEdit01, 1, 2);
+
+    // Background filter
+    QGroupBox *gBoxBackg = new QGroupBox("Background Filter", w);
+    QGridLayout *grid_layout1 = new QGridLayout(w);
+    grid_layout1->setAlignment(Qt::AlignCenter);
+    gBoxBackg->setLayout(grid_layout1);
+
+    QLabel *lab10 = new QLabel(w);
+    lab10->setText("Radius:");
+    QSlider *slider10 = new QSlider(Qt::Horizontal, w);
+    QLineEdit *lineEdit10 = new QLineEdit(w);
+    slider10->setRange(0, 10);
+    lineEdit10->setFixedWidth(120);
+    grid_layout1->addWidget(lab10, 0, 0);
+    grid_layout1->addWidget(slider10, 0, 1);
+    grid_layout1->addWidget(lineEdit10, 0, 2);
+
+    QLabel *lab11 = new QLabel(w);
+    lab11->setText("Minimum Points:");
+    QSlider *slider11 = new QSlider(Qt::Horizontal, w);
+    QLineEdit *lineEdit11 = new QLineEdit(w);
+    lineEdit11->setFixedWidth(120);
+    grid_layout1->addWidget(lab11, 1, 0);
+    grid_layout1->addWidget(slider11, 1, 1);
+    grid_layout1->addWidget(lineEdit11, 1, 2);
+
+    // Feature point extractor
+    QGroupBox *gBoxFeature = new QGroupBox("Feature extractor", w);
+    QGridLayout *grid_layout2 = new QGridLayout(w);
+    grid_layout2->setAlignment(Qt::AlignCenter);
+    gBoxFeature->setLayout(grid_layout2);
+
+    QLabel *lab20 = new QLabel(w);
+    lab20->setText("Point Index:");
+    QSpinBox *spinBox20 = new QSpinBox(w);
+    spinBox20->setRange(0, 10);
+    spinBox20->setSingleStep(1);
+    grid_layout2->addWidget(lab20, 0, 0);
+    grid_layout2->addWidget(spinBox20, 0, 1, 1, 2);
+
+    QLabel *lab21 = new QLabel(w);
+    QLineEdit *lineEdit21 = new QLineEdit(w);
+    QSlider *slider21 = new QSlider(Qt::Horizontal, w);
+    lab21->setText("Tolerance:");
+    slider21->setRange(0, 10);
+    lineEdit21->setFixedWidth(120);
+    grid_layout2->addWidget(lab21, 1, 0);
+    grid_layout2->addWidget(slider21, 1, 1);
+    grid_layout2->addWidget(lineEdit21, 1, 2);
+
+    // Add panels to widget
+    QVBoxLayout *v_layout = new QVBoxLayout(w);
+    v_layout->addWidget(gBoxNoise);
+    v_layout->addWidget(gBoxBackg);
+    v_layout->addWidget(gBoxFeature);
+    v_layout->setAlignment(Qt::AlignCenter);
+
+    w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    w->setLayout(v_layout);
+
+    return w;
+}
+
 /**
  * Creates a dock widget with a file system tree view
  */
 ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
 {
-    m_dataBrowser = new QListWidget();
+
+    QWidget *w = new QWidget();
+    w->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    w->setStyleSheet("border: 2px solid darkGray; border-radius: 10px;");
+
+    QVBoxLayout *layout_v = new QVBoxLayout(w);
+    layout_v->setAlignment(Qt::AlignCenter);
+    w->setLayout(layout_v);
+
+    // create m_dataBrowser, and add it to widget
+    m_dataBrowser = new QListWidget(w);
+    layout_v->addWidget(m_dataBrowser);
     m_dataBrowser->setViewMode(QListView::IconMode);
     m_dataBrowser->setGridSize(QSize(180,200));
     m_dataBrowser->setIconSize(QSize(156,156));
@@ -327,16 +434,15 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
     m_dataBrowser->setWrapping(false);
     m_dataBrowser->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     m_dataBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_dataBrowser->setFocusPolicy(Qt::NoFocus);
 
     QScrollBar* horizontalScrollBar = new QScrollBar(Qt::Horizontal, m_dataBrowser);
     m_dataBrowser->setHorizontalScrollBar(horizontalScrollBar);
 
+    // create DockWidget, and add widget to it
     ads::CDockWidget* DockWidget = new ads::CDockWidget(QString("Data Browser"));
-    DockWidget->setWidget(m_dataBrowser);
+    DockWidget->setWidget(w);
     DockWidget->setIcon(svgIcon(":/icon/resource/folder.svg"));
-    // We disable focus to test focus highlighting if the dock widget content
-    // does not support focus
-    m_dataBrowser->setFocusPolicy(Qt::NoFocus);
     
     // read files from image directory
     connect(this, &MainWindow::signalUpdateBrowser, this, [this](){
@@ -352,7 +458,7 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
 
         QDir folder(folderPath);
         if (!folder.exists()) {
-            std::cout << "ERROR: The folder is not exist!\n";
+            std::cout << "ERROR: YML folder is not exist!\n";
             return;
         }
 
@@ -365,10 +471,13 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
 
         // clear listWidget and reset data browser
         m_dataBrowser->clear();
+        m_dataBrowser->setStyleSheet("QListWidget{background-color: transparent;}");
+        QFont font("Arial", 7);
         for(int i = 0; i < files.count(); i++){
             QListWidgetItem* item = new QListWidgetItem();
-            item->setIcon(QIcon(":/icon/resource/photo.svg"));
+            item->setFont(font);
             item->setText(files[i]);
+            item->setIcon(QIcon(":/icon/resource/photo.svg"));
             m_dataBrowser->addItem(item);
         }
 
@@ -495,18 +604,18 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     QMenu *optionsAlgor = new QMenu();
     actAlgors->setMenu(optionsAlgor);
     QActionGroup *optionGroup1 = new QActionGroup(actAlgors);
-    QAction *option_Regr = new QAction("Regression", optionGroup1);
-    QAction *option_Iter = new QAction("Iterative", optionGroup1);
+    QAction *optionRegr = new QAction("Regression", optionGroup1);
+    QAction *optionIter = new QAction("Iterative", optionGroup1);
 
-    option_Regr->setCheckable(true);
-    option_Iter->setCheckable(true);
-    optionsAlgor->addAction(option_Regr);
-    optionsAlgor->addAction(option_Iter);
-    connect(option_Regr, &QAction::triggered, this, [this]()
+    optionRegr->setCheckable(true);
+    optionIter->setCheckable(true);
+    optionsAlgor->addAction(optionRegr);
+    optionsAlgor->addAction(optionIter);
+    connect(optionRegr, &QAction::triggered, this, [this]()
     { 
         m_section["Config"]["CalibAlgor"] = "Regression";
     });
-    connect(option_Iter, &QAction::triggered, this, [this]()
+    connect(optionIter, &QAction::triggered, this, [this]()
     { 
         m_section["Config"]["CalibAlgor"] = "Iterative";
     });
@@ -763,7 +872,20 @@ void MainWindow::showScanData(QListWidgetItem* item)
     QString qstr = item->text();
     std::string ImgSaveDir = m_section["Dataset"]["ImagesDir"];
     std::string ImgPath = ImgSaveDir + "/" + qstr.toUtf8().constData();
-    view3DLoadYML(ImgPath);
+    
+    std::vector<cv::Point3f> pointCloud;
+    cv::FileStorage fs(ImgPath, cv::FileStorage::READ);
+    fs["scan_line"] >> pointCloud;
+    fs.release();
+
+    m_viewer3d->RenderWinReset();
+    m_viewer3d->pointsDisplay(pointCloud, 4);
+
+    std::vector<cv::Point2f> pointCloud_2d;
+    for(const cv::Point3f pnt3d: pointCloud)
+        pointCloud_2d.push_back({pnt3d.x, pnt3d.z});
+
+    m_ChartViewer->setPointCloud(pointCloud_2d);
 }
 
 void MainWindow::createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar)
@@ -1062,43 +1184,11 @@ void MainWindow::loadQssStyle(SARibbonBar* ribbon)
     ribbon->setStyleSheet(qss);
 }
 
-bool MainWindow::view3DLoadYML(std::string img_path)
-{
-    m_viewer3d->RenderWinReset();
-    std::vector<cv::Point3f> pointCloud;
-    cv::FileStorage fs(img_path, cv::FileStorage::READ);
-    fs["scan_line"] >> pointCloud;
-    fs.release();
-    m_viewer3d->pointsDisplay(pointCloud, 4);
-
-    return true;
-}
-
 bool MainWindow::view3DLoadStl(std::string stl_path)
 {
     m_viewer3d->RenderWinReset();
 
     m_viewer3d->stlDiaplay(stl_path);
-
-    return true;
-}
-
-bool MainWindow::view2DLoadYML(std::string yml_path)
-{
-    std::vector<cv::Point3f> scan_line;
-	cv::FileStorage fs(yml_path, cv::FileStorage::READ);
-	fs["scan_line"] >> scan_line;
-    fs.release();
-
-    std::vector<cv::Point2f> scan_line_2d;
-    for(const cv::Point3f pnt: scan_line){
-        if(pnt.x != NULL && pnt.z != NULL)
-            scan_line_2d.push_back({pnt.x, pnt.z});
-        else
-            continue;
-    }
-
-    m_ChartViewer->setPointCloud(scan_line_2d);
 
     return true;
 }

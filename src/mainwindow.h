@@ -37,6 +37,7 @@ private:
     ads::CDockWidget* createQtImgviewerDockWidget();
     ads::CDockWidget* createQtChartviewerDockWidget();
     ads::CDockWidget* createPropertyBrowser();
+    QWidget* createControlPanel();
     ads::CDockWidget* createDataBrowserDockWidget();
     void createCategoryCalib(SARibbonCategory* page);
     void createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar);
@@ -49,9 +50,7 @@ private:
     void sectionWidget(bool showWithSection = false);
 
     void loadQssStyle(SARibbonBar* ribbon);
-    bool view3DLoadYML(std::string img_path);
     bool view3DLoadStl(std::string stl_path);
-    bool view2DLoadYML(std::string yml_path);
 
 signals:
     void signalUpdateBrowser();
