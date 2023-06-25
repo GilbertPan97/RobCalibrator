@@ -36,12 +36,20 @@ elseif(QT_VERSION_MAJOR STREQUAL "6")
 endif()
 
 # find vtk package: used for QtDataViewer
-find_package(VTK REQUIRED HINTS ${THIRD_PARTY})
+find_package(VTK REQUIRED HINTS ${THIRD_PARTY}
+             COMPONENTS
+             CommonCore
+             CommonColor
+             RenderingCore
+             RenderingAnnotation
+             GUISupportQt
+             IOGeometry)
+
 option(VTK_USE_QVTK_OPENGL_NATIVE "Use QVTKOpenGLNativeWidget for rendering" ON)
 if (VTK_USE_QVTK_OPENGL_NATIVE)
   add_definitions(-DVTK_USE_QVTK_OPENGL_NATIVE)
 endif()
-message(STATUS "VTK package dir is: ${VTK_DIR}")
+message(STATUS "VTK used package include: ${VTK_LIBRARIES}")
 
 # find opencv package: used for QtDataViewer
 find_package(OpenCV REQUIRED HINTS ${THIRD_PARTY})

@@ -2,6 +2,9 @@
 set(SFRCALIB_MAINWIN RobCalib)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+# WARNING: Variables defined in a sub-level CMake file are only visible within that file and its immediate sub-level files. 
+# They are not automatically propagated to the parent or higher-level CMake files.
+
 # find qt package: for main window exec
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} 5.7 COMPONENTS Core Gui Widgets REQUIRED)
@@ -9,15 +12,23 @@ message(STATUS "current Qt version is Qt${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}.
 
 # find Eigen package: used for Calibrator
 find_package(Eigen3 REQUIRED HINTS ${THIRD_PARTY})
-message(STATUS ${EIGEN3_INCLUDE_DIRS})
+message(STATUS "Eigen dir is: ${EIGEN3_INCLUDE_DIRS}")
 
 # find vtk package: used for QtVTKviewer
-find_package(VTK REQUIRED HINTS ${THIRD_PARTY})
+find_package(VTK REQUIRED HINTS ${THIRD_PARTY}
+             COMPONENTS
+             CommonCore
+             CommonColor
+             RenderingCore
+             RenderingAnnotation
+             GUISupportQt
+             IOGeometry)
+
 option(VTK_USE_QVTK_OPENGL_NATIVE "Use QVTKOpenGLNativeWidget for rendering" ON)
 if (VTK_USE_QVTK_OPENGL_NATIVE)
   add_definitions(-DVTK_USE_QVTK_OPENGL_NATIVE)
 endif()
-message(STATUS "VTK package dir is: ${VTK_DIR}")
+message(STATUS "VTK used package include: ${VTK_LIBRARIES}")
 
 # find nlohmann_json package: for main window exec
 find_package(nlohmann_json REQUIRED HINTS ${THIRD_PARTY}/json-3.11.2/share/cmake/nlohmann_json)
@@ -58,6 +69,7 @@ target_link_libraries(${SFRCALIB_MAINWIN} PRIVATE
                       QtDataViewer
                       SARibbonBar
                       Calibrator)
+
 target_link_libraries(${SFRCALIB_MAINWIN} PUBLIC
                       Qt${QT_VERSION_MAJOR}::Core 
                       Qt${QT_VERSION_MAJOR}::Gui 

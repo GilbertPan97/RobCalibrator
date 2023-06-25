@@ -4,8 +4,8 @@
         "CalibType": "EyeInHand"
     },
     "Dataset": {
-        "ImagesDir": "C:/Users/GilbertPan/Desktop/RobLab/data/ScanData",
-        "RobPosesFile": "C:/Users/GilbertPan/Desktop/RobLab/data/ScanData/RobPoses.rob"
+        "ImagesDir": "C:/Users/GilbertPan/Documents/Github_WS/RobLab/data/ScanData",
+        "RobPosesFile": "C:/Users/GilbertPan/Documents/Github_WS/RobLab/data/ScanData/RobPoses.rob"
     },
     "Description": {
         "Label": "Used for hand-eye calibration with AT camera",

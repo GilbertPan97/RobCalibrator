@@ -4,8 +4,6 @@ add_subdirectory(QtPropertyBrowser)
 
 add_subdirectory(QtDataViewer)
 
-# add_subdirectory(QtImgViewer)
-
 add_subdirectory(SARibbonBar)
 
 add_subdirectory(QtAdvancedDocking)
