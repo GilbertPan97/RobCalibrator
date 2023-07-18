@@ -20,39 +20,39 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/eigen.hpp>
 
-namespace Calibrator 
+
+namespace CalibUtils
 {
-    namespace Utils
-    {
 
-        Eigen::Matrix4f RT2HomogeneousMatrix(const Eigen::Matrix3f& R, const Eigen::Vector3f& T);
+    Eigen::Matrix4f RT2HomogeneousMatrix(const Eigen::Matrix3f& R, const Eigen::Vector3f& T);
 
-        void HomogeneousMtr2RT(const Eigen::Matrix4f& homoMtr, Eigen::Matrix3f& R, Eigen::Vector3f& T);
+    void HomogeneousMtr2RT(const Eigen::Matrix4f& homoMtr, Eigen::Matrix3f& R, Eigen::Vector3f& T);
 
-        Eigen::Matrix4f XYZWPRVecToHTM(const Eigen::VectorXf XYZWPR);
+    Eigen::Matrix4f XYZWPRVecToHTM(const Eigen::VectorXf XYZWPR);
 
-        Eigen::VectorXf HTMToXYZWPRVec(const Eigen::Matrix4f HTM);
+    Eigen::VectorXf HTMToXYZWPRVec(const Eigen::Matrix4f HTM);
+    
+    Eigen::VectorXf HTMToXYZQUAVec(const Eigen::Matrix4f HTM);
 
-        cv::Mat toCvMat(const Eigen::MatrixXf& mtr_eigen);
+    cv::Mat toCvMat(const Eigen::MatrixXf& mtr_eigen);
 
-        Eigen::MatrixXf toEigenMatrix(const cv::Mat& mtr_cv);
+    Eigen::MatrixXf toEigenMatrix(const cv::Mat& mtr_cv);
 
-        Eigen::VectorXf toEigenVector(const cv::Mat& vec_cv);
+    Eigen::VectorXf toEigenVector(const cv::Mat& vec_cv);
 
-        bool isRotatedMatrix(const Eigen::Matrix3f& R);
+    bool isRotatedMatrix(const Eigen::Matrix3f& R);
 
-        bool isInVector(const int idx, std::vector<int> idxVector);
+    bool isInVector(const int idx, std::vector<int> idxVector);
 
-        Eigen::Matrix3f skew(const Eigen::Vector3f& v);
+    Eigen::Matrix3f skew(const Eigen::Vector3f& v);
 
-        Eigen::Matrix3f rodrigues(const Eigen::Vector3f& v);
+    Eigen::Matrix3f rodrigues(const Eigen::Vector3f& v);
 
-        std::vector<Eigen::Vector3f> toEigenPoints(const std::vector<cv::Point3f>& points);
+    std::vector<Eigen::Vector3f> toEigenPoints(const std::vector<cv::Point3f>& points);
 
-        std::vector<cv::Point3f> to3D(std::vector<cv::Point2f> points_2d);
+    std::vector<cv::Point3f> to3D(std::vector<cv::Point2f> points_2d);
 
-        std::vector<cv::Point2f> to2D(std::vector<cv::Point3f> point_3d);
-    }
+    std::vector<cv::Point2f> to2D(std::vector<cv::Point3f> point_3d);
 }
 
 #endif

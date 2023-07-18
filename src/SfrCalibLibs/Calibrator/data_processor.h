@@ -18,7 +18,7 @@
 
 class DataProc {
 private:
-    Calibrator::CalibObj calib_obj_;                           // calibration object
+    CalibObj calib_obj_;                           // calibration object
     std::vector<std::vector<cv::Point3f>> scan_lines_;      // original scan line data
 
     // if process object is: sphere
@@ -35,9 +35,9 @@ private:
 public:
     DataProc();
 
-    DataProc(std::vector<std::vector<cv::Point3f>> scan_lines, Calibrator::CalibObj obj);
+    DataProc(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj);
 
-    void SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, Calibrator::CalibObj obj);
+    void SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj);
 
     std::vector<cv::Point3f> CalcSphereCtrs(float rad_sphere);          // used for calib obj: sphere
 

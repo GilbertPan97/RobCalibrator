@@ -111,6 +111,23 @@ static QIcon svgIcon(const QString& File)
 	return SvgIcon;
 }
 
+nlohmann::json jsonSolXYZQUA(Eigen::VectorXf xyzqua){
+    nlohmann::json js_xyzqua;
+    if(xyzqua.size() != 7){
+        std::cerr << "ERROR: xyzqua size is-" << xyzqua.size() << std::endl;
+        exit(-1);
+    }
+    js_xyzqua["coordinate"]["x"] = xyzqua[0];
+    js_xyzqua["coordinate"]["y"] = xyzqua[1];
+    js_xyzqua["coordinate"]["z"] = xyzqua[2];
+    js_xyzqua["orientation"]["w"] = xyzqua[3];
+    js_xyzqua["orientation"]["x"] = xyzqua[4];
+    js_xyzqua["orientation"]["y"] = xyzqua[5];
+    js_xyzqua["orientation"]["z"] = xyzqua[6];
+
+    return js_xyzqua;
+}
+
 MainWindow::MainWindow(QWidget* par) : 
     SARibbonMainWindow(par), 
     m_customizeWidget(nullptr)
@@ -148,16 +165,18 @@ MainWindow::MainWindow(QWidget* par) :
     
     // add 3D line scanner calib ribbon
     SARibbonCategory* cat_3dScanner = new SARibbonCategory();
-    cat_3dScanner->setCategoryName(tr("   Calibrator   "));
-    cat_3dScanner->setObjectName(("Calibrator"));
+    cat_3dScanner->setCategoryName(tr("   ScanCalibrator   "));
+    cat_3dScanner->setObjectName(("ScanCalibrator"));
     createCategoryCalib(cat_3dScanner);
     ribbon->addCategoryPage(cat_3dScanner);
 
-    // TODO: test qss
-    SARibbonCategory* test = new SARibbonCategory();
-    test->setCategoryName(tr("   test   "));
-    test->setObjectName(("test"));
-    ribbon->addCategoryPage(test);
+    // TODO: add camera hand-eye calibrator
+#ifdef CAMERA_PLUGIN
+    SARibbonCategory* cat_2dCamera = new SARibbonCategory();
+    cat_2dCamera->setCategoryName(tr("   CamCalibrator   "));
+    cat_2dCamera->setObjectName(("CamCalibrator"));
+    ribbon->addCategoryPage(cat_2dCamera);
+#endif
 
     // add 2D & 3D viewer, and QtPropertyBrowser
     m_dockManager = new ads::CDockManager(this);
@@ -706,7 +725,7 @@ bool MainWindow::onCalibTriggered()
     QThread::msleep(800);       // wait 800ms 
 
 	// process scan data
-	DataProc proc(scan_lines, Calibrator::CalibObj::SPHERE);
+	DataProc proc(scan_lines, CalibObj::SPHERE);
 	float rad_sphere = 25.4 / 2.0;
 	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere);
     prog->setValue(30);
@@ -729,31 +748,35 @@ bool MainWindow::onCalibTriggered()
     QThread::msleep(800);
 
 	// build calibration
-	Calibrator::LineScanner::HandEyeCalib hec;
+	LineScanner::HandEyeCalib hec;
 
 	hec.SetRobPose(vec_rob_pose);
 
-	hec.SetObjData(ctr_pnts, Calibrator::CalibObj::SPHERE);
+	hec.SetObjData(ctr_pnts, CalibObj::SPHERE);
     prog->setValue(70);
     QThread::msleep(800);
 
-	hec.run(Calibrator::LineScanner::SolveMethod::ITERATION);
+	hec.run(LineScanner::SolveMethod::ITERATION);
     prog->setValue(100);
 
 	std::vector<float> dis_ctr;
     float err = 0;
     bool check = hec.CalcCalibError(dis_ctr, err);
 
-    Eigen::Matrix4f solution = hec.GetCalcResult();
-    auto solution_vec = hec.GetCalcResultXYZWPR();
+    Eigen::Matrix4f sol_mtr = hec.GetCalcResult();
+    auto sol_xyzwpr = hec.GetCalcResultXYZWPR();
+    auto sol_xyzQua = hec.GetCalcResultXYZQUA();
 
     // save result to section
-    m_section["Solution"] = {{"xyzwpr", solution_vec},
+    m_section["Solution"] = {
+        {"xyzwpr", sol_xyzwpr},
         {"HTM", {
-            {solution(0,0), solution(0,1), solution(0,2), solution(0,3)},
-            {solution(1,0), solution(1,1), solution(1,2), solution(1,3)},
-            {solution(2,0), solution(2,1), solution(2,2), solution(2,3)},
-            {solution(3,0), solution(3,1), solution(3,2), solution(3,3)} }
+            {sol_mtr(0,0), sol_mtr(0,1), sol_mtr(0,2), sol_mtr(0,3)},
+            {sol_mtr(1,0), sol_mtr(1,1), sol_mtr(1,2), sol_mtr(1,3)},
+            {sol_mtr(2,0), sol_mtr(2,1), sol_mtr(2,2), sol_mtr(2,3)},
+            {sol_mtr(3,0), sol_mtr(3,1), sol_mtr(3,2), sol_mtr(3,3)} }
+        },
+        {"xyzQua", jsonSolXYZQUA(sol_xyzQua)
         }
     };
 
@@ -762,7 +785,7 @@ bool MainWindow::onCalibTriggered()
     // printf calibration result
     Eigen::IOFormat fmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
     std::ostringstream stream;
-    stream << solution.format(fmt);
+    stream << sol_mtr.format(fmt);
     std::string msg = stream.str() + "\n";
 
     std::string msg1;

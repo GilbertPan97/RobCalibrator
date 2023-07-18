@@ -1,5 +1,6 @@
 ﻿cmake_minimum_required(VERSION 3.5)
 set(SFRCALIB_MAINWIN RobCalib)
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # WARNING: Variables defined in a sub-level CMake file are only visible within that file and its immediate sub-level files. 
@@ -100,7 +101,7 @@ if(WIN32)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E
                 copy_if_different 
-                    "$<TARGET_FILE:SARibbonBar>"        # get SARibbonBar library path
+                    "$<TARGET_FILE:SARibbonBar>"                # get SARibbonBar library path
                     "$<TARGET_FILE_DIR:${SFRCALIB_MAINWIN}>"    # get SFRCALIB_MAINWIN (exe) dir
     )
 	create_win32_resource_version(

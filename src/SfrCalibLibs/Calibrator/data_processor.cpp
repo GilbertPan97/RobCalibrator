@@ -15,19 +15,19 @@ DataProc::DataProc(){
     
 }
 
-DataProc::DataProc(std::vector<std::vector<cv::Point3f>> scan_lines, Calibrator::CalibObj obj){
+DataProc::DataProc(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj){
     scan_lines_ = scan_lines;
     calib_obj_ = obj;
 }
 
-void DataProc::SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, Calibrator::CalibObj obj){
+void DataProc::SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj){
     scan_lines_ = scan_lines;
     calib_obj_ = obj;
 }
 
 std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere){
     // check calibrate object
-    if(calib_obj_ != Calibrator::CalibObj::SPHERE){
+    if(calib_obj_ != CalibObj::SPHERE){
         std::cout << "ERROR: Calibration object is not set or fault.\n";
         exit(-3);
     }
@@ -88,7 +88,7 @@ std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere){
 
 std::vector<std::vector<cv::Point3f>> DataProc::CalcTriEdgePntsInCamera(){
     // check calibrate object
-    if(calib_obj_ != Calibrator::CalibObj::TRIANGLE_BOARD){
+    if(calib_obj_ != CalibObj::TRIANGLE_BOARD){
         std::cout << "ERROR: Calibration object is not set or fault.\n";
         exit(-3);
     }
@@ -124,7 +124,7 @@ std::vector<std::vector<cv::Point3f>> DataProc::CalcTriEdgePntsInCamera(){
 
 std::vector<std::vector<cv::Point3f>> DataProc::CalcTriEdgePntsInRobase(Eigen::Vector<float, 6> vec_pose_board, Eigen::Vector3f tri_vert, float tri_angle){
     // calculate transform of robot to board
-    auto htm_board = Calibrator::Utils::XYZWPRVecToHTM(vec_pose_board);
+    auto htm_board = CalibUtils::XYZWPRVecToHTM(vec_pose_board);
     tri_angle = tri_angle * M_PI / 180;     // transfer to rad
 
     // calculate tirangle edge points in robot base frame
