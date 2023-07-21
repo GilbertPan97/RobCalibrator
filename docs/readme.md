@@ -3,7 +3,7 @@
 
 This is a lightweight Ribbon control (Officestyle UI) based on Qt (minimum Qt5, compiler supporting C++ 11). Screenshot of the interface:
 
-![](./doc/screenshot/001.gif)
+![](./screenshot/001.gif)
 
 MIT protocol, welcome to use and make comments
 
@@ -56,7 +56,7 @@ Simply understand, Ribbon combines menu bars and toolbars and displays them thro
 
 
 
-![msdn ribbon introduction page](./doc/pic/msdn-ribbon.png)
+![msdn ribbon introduction page](./pic/msdn-ribbon.png)
 
 
 
@@ -95,7 +95,7 @@ pannel1->addLargeAction(actSave);
 
 The above operation adds a button, and the effect is shown in the following figure:
 
-![](./doc/pic/add-large-action.png)
+![](./pic/add-large-action.png)
 
 Different layout styles can be combined through`addLargeAction`、`addMediumAction`、`addSmallAction`. For details, see :
 
@@ -117,7 +117,7 @@ Action added by different methods will be shown in different way in pannel. See 
 
 The so-called Context Category refers to the label / label group that appears only under special circumstances. For example, when office word selects a picture, the Context Category of picture editing will appear, as shown in the following figure:
 
-![Context Category](doc/pic/word-contextcategory.png)
+![Context Category](pic/word-contextcategory.png)
 
 The class corresponding to the Context Category in SARibbon is `SARibbonContextCategory`
 
@@ -184,7 +184,7 @@ QuickAccessBar is the quick toolbar in the upper left corner and rightButtonGrou
 
 
 
-![QuickAccessBar And RightButtonGroup](./doc/screenshot/QuickAccessBarAndRightButtonGroup.png)
+![QuickAccessBar And RightButtonGroup](./screenshot/QuickAccessBarAndRightButtonGroup.png)
 
 In `SARibbon`：
 
@@ -232,11 +232,11 @@ Office mode is the most common ribbon mode. The tab and title bars occupy a lot 
 
 This mode is consistent with the Ribbon style of Office. The screenshot of the word interface of office is as follows:
 
-![Interface Screenshot of Office](./doc/pic/office-screenshot.png)
+![Interface Screenshot of Office](./pic/office-screenshot.png)
 
 `SARibbonBar::OfficeStyle` style for SARibbon
 
-![](./doc/screenshot/office-mode.png)
+![](./screenshot/office-mode.png)
 
 For the layout of the above style, see [SARibbon layout] (#SARibbon layout).
 
@@ -244,11 +244,11 @@ For the layout of the above style, see [SARibbon layout] (#SARibbon layout).
 
 The ribbon mode designed by WPS has been improved. In order to reduce the height of the ribbon, it sets the label and title bar together, so as to reduce the height of a title bar and effectively use the vertical space. This is the first change to the ribbon by WPS.
 
-![WPs changed the layout of ribbon for the first time](./doc/pic/wps-change-ribbon-1.jpg)
+![WPs changed the layout of ribbon for the first time](./pic/wps-change-ribbon-1.jpg)
 
 `SARibbonBar::WpsLiteStyle` style for SARibbon
 
-![](./doc/screenshot/wps-mode.png)
+![](./screenshot/wps-mode.png)
 
 For the layout of the above style, see [SARibbon layout] (#SARibbon layout).
 
@@ -257,26 +257,26 @@ Under the normal screen, the WPS style will reduce the vertical height by at lea
 ## Display comparison under different styles
 
 `SARibbonBar::OfficeStyle`
-![](doc/screenshot/office-3-style.png)
+![](screenshot/office-3-style.png)
 
 `SARibbonBar::OfficeStyleTwoRow`
-![](doc/screenshot/office-2-style.png)
+![](screenshot/office-2-style.png)
 
 `SARibbonBar::WpsLiteStyle`
-![](doc/screenshot/wps-3-style.png)
+![](screenshot/wps-3-style.png)
 
 `SARibbonBar::WpsLiteStyleTwoRow`
-![](doc/screenshot/wps-2-style.png)
+![](screenshot/wps-2-style.png)
 
 In addition, if you change whether the font wraps in the 2-line mode, two styles can appear, which can be set through the static function `SARibbonToolButton::setLiteStyleEnableWordWrap`.
 
 The display effect of the 2-line mode without text wrapping is as follows:
 
 `SARibbonBar::OfficeStyleTwoRow and SARibbonToolButton::setLiteStyleEnableWordWrap(false)`
-![](doc/screenshot/office-2-style-nowrap.png)
+![](screenshot/office-2-style-nowrap.png)
 
 `SARibbonBar::WpsLiteStyleTwoRow and SARibbonToolButton::setLiteStyleEnableWordWrap(false)`
-![](doc/screenshot/wps-2-style-nowrap.png)
+![](screenshot/wps-2-style-nowrap.png)
 
 If the toolbar text does not wrap, the icon will be larger and the display effect will be better. This depends on the specific needs. Using `SARibontoolbutton:: setlitestyleenablewordwrap (false) `will not change the height of the ribbon bar, but the icon will change a little larger.
 
@@ -286,17 +286,17 @@ If the toolbar text does not wrap, the icon will be larger and the display effec
 
 In order to make better use of the vertical space, WPS has changed the original 3 rows into 2 rows, which can free up more vertical space. This is the second layout change of the ribbon by WPS. The screenshot of the new version of WPS is as follows:
 
-![Wps changed the layout of ribbon for the second time](./doc/pic/wps-change-ribbon-2.png)
+![Wps changed the layout of ribbon for the second time](./pic/wps-change-ribbon-2.png)
 
 `SARibbon`also uses this design method for reference, and implements a 2-line scheme for both the Ribbon style of office and the Ribbon style of WPS. The effects are as follows:
 
 The 2-line display effect of office ribbon style:
 
-![](./doc/screenshot/office-mode-2line.png)
+![](./screenshot/office-mode-2line.png)
 
 The 2 lines of wps ribbon style display effect:
 
-![](./doc/screenshot/wps-mode-2line.png)
+![](./screenshot/wps-mode-2line.png)
 
 The vertical height of different styles under the normal screen is shown in the following table:
 
@@ -319,7 +319,7 @@ Different styles have different layout methods.
 
 The layout of `SARibbon OfficeStyle` is shown in the following figure:
 
-![OfficeStyle Layout](./doc/pic/ribbonbar-geometry-office3.png)
+![OfficeStyle Layout](./pic/ribbonbar-geometry-office3.png)
 
 This layout is consistent with the default layout of office.
 
@@ -327,7 +327,7 @@ This layout is consistent with the default layout of office.
 
 This mode is different from the Ribbon style of Office. By referring to the ribbon interface practice of WPS, the title bar that takes up more space in the office ribbon is used to maximize the use of the interface. In this mode, the height of one title bar can be reduced.
 
-![WpsLiteStyle Layout](./doc/pic/ribbonbar-geometry-wps3.png)
+![WpsLiteStyle Layout](./pic/ribbonbar-geometry-wps3.png)
 
 
 
@@ -339,7 +339,7 @@ In the standard pannel, an action (button) has three layouts. Taking office word
 - Second, two rows are placed under a pannel, which is called `Medium`.
 - Third, a pannel places three lines of content, which is called `Samll`.
 
-![word pannel layout example](./doc/pic/pannelLayout3row-example.png)
+![word pannel layout example](./pic/pannelLayout3row-example.png)
 
 Therefore, the layout of the pannel is actually the number of rows in the final analysis. It can be understood that the `QGridLayout` is used to layout the pannel. The grid is divided into six rows, which occupy all six rows in the `Large` mode, three rows in the `Medium` mode, and two rows in the `Small` mode (in fact, it is not arranged in the GridLayout).
 
@@ -368,7 +368,7 @@ The following describes the number of rows in detail.
 
 The three line mode is the traditional pannel layout, as shown in the following figure:
 
-![3-line ribbon layout example](./doc/pic/pannelLayout3row.png)
+![3-line ribbon layout example](./pic/pannelLayout3row.png)
 
 In the 3-line mode, there are three kinds of placeholders (`SARibbonPannelItem::RowProportion`), which are large, medium and small
 
@@ -382,7 +382,7 @@ The pannel in the 3-line mode will display the title of the pannel in the `Panne
 
 The two-line mode is the traditional WPS improved layout method , as shown in the following figure:
 
-![2-line ribbon layout example](./doc/pic/pannelLayout2row.png)
+![2-line ribbon layout example](./pic/pannelLayout2row.png)
 
 In the 2-line mode, the medium and small placeholders (`SARibbonPannelItem::RowProportion`) are the same, and no distinction is made.
 
@@ -390,7 +390,7 @@ In the other two line mode, pannel does not display the title.
 
 The 2-line mode is compiled according to WPS 2020. The screenshot of WPS2020 is as follows:
 
-![WPS pannel 2-line ribbon layout example](./doc/pic/pannelLayout2row-example.png)
+![WPS pannel 2-line ribbon layout example](./pic/pannelLayout2row-example.png)
 
 > Note: The title of the category in the two-line mode is not displayed.
 
@@ -400,11 +400,11 @@ Ribbon customization is a feature of ribbon. With reference to the custom interf
 
 The following is the custom interface of office.
 
-![office custom interface](./doc/screenshot/customize/customization-office-ui.png)
+![office custom interface](./screenshot/customize/customization-office-ui.png)
 
 The following is the custom interface of WPS.
 
-![wps custom interface](./doc/screenshot/customize/customization-wps-ui.png)
+![wps custom interface](./screenshot/customize/customization-wps-ui.png)
 
 SARibbon refers to the interface of office and WPS, and encapsulates the easy-to-use `SARibbonCustomize**` class, including the following five classes:
 
@@ -473,27 +473,27 @@ SARibbon customization can be realized in the above steps.
 
 # More screenshots
 
-![](./doc/screenshot/SARibbonBar-screenshot-01.gif)
+![](./screenshot/SARibbonBar-screenshot-01.gif)
 
 - Supports the minimize mode. The ribbon only displays the label (by default, double clicking the label will switch)
 
-![](./doc/screenshot/SARibbonBar-screenshot-minMode.gif)
+![](./screenshot/SARibbonBar-screenshot-minMode.gif)
 
 - quickAccessBar (word quick menu) is supported, which has different display effects in WPS mode and office mode
 
-![](./doc/screenshot/SARibbonBar-screenshot-quickAccessBar.gif)
+![](./screenshot/SARibbonBar-screenshot-quickAccessBar.gif)
 
 - Support 4 different ribbon buttons, common button, delayed pop-up menu button, menu button, and action menu button (action menu button is one of the main problems to be solved by this ribbon control)
 
-![](./doc/screenshot/SARibbonBar-screenshot-ribbonbutton.gif)
+![](./screenshot/SARibbonBar-screenshot-ribbonbutton.gif)
 
 - Support qss to set ribbon
 
-![](./doc/screenshot/SARibbonBar-screenshot-useqss.gif)
+![](./screenshot/SARibbonBar-screenshot-useqss.gif)
 
 - This is a screenshot of another open source software that uses this control.
 
-![](./doc/screenshot/sa-screenshot.gif)
+![](./screenshot/sa-screenshot.gif)
 
 [github - https://github.com/czyt1988/sa](https://github.com/czyt1988/sa)
 

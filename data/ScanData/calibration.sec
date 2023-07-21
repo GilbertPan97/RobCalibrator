@@ -1,4 +1,8 @@
 {
+    "CalibObj": {
+        "Name": "Sphere",
+        "Radius": 12.7
+    },
     "Config": {
         "CalibAlgor": "Iterative",
         "CalibType": "EyeInHand"
@@ -9,7 +13,7 @@
     },
     "Description": {
         "Label": "Used for hand-eye calibration with AT camera",
-        "SaveTime": "2023-07-18 14:57:01"
+        "SaveTime": "2023-07-21 12:20:11"
     },
     "Solution": {
         "HTM": [
@@ -39,16 +43,16 @@
             ]
         ],
         "xyzQua": {
-            "coordinate": {
-                "x": 78.45849609375,
-                "y": -12.341071128845215,
-                "z": 264.4588623046875
-            },
-            "orientation": {
+            "quanternion": {
                 "w": -0.01773991994559765,
                 "x": 0.41667813062667847,
                 "y": 0.9085331559181213,
                 "z": -0.025142209604382515
+            },
+            "xyz": {
+                "x": 78.45849609375,
+                "y": -12.341071128845215,
+                "z": 264.4588623046875
             }
         },
         "xyzwpr": [

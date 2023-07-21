@@ -47,7 +47,7 @@ private:
     QAction* createAction(const QString& text, const QString& iconurl, const QString& objName);
     QAction* createAction(const QString& text, const QString& iconurl);
 
-    void sectionWidget(bool showWithSection = false);
+    void sectionDispWidget(bool showWithSection = false);
 
     void loadQssStyle(SARibbonBar* ribbon);
     bool view3DLoadStl(std::string stl_path);
@@ -66,10 +66,11 @@ private slots:
     void onActionHelpTriggered();
     void onActionRemoveAppBtnTriggered(bool b);
     void showScanData(QListWidgetItem* item);
+    void saveProjectSection();
     void savePerspective();
     void restorePerspective();
-    void saveState();
-    void restoreState();
+    void saveLayoutConfig();
+    void restoreLayoutConfig();
 
 private:
     StartupProgressWindow* m_startupProgressWindow;
@@ -82,6 +83,7 @@ private:
 
     ads::CDockManager* m_dockManager;
 
+    QString m_section_path;
     nlohmann::json m_section;       // calibration section
     SARibbonActionsManager* m_actMgr;
     int m_actionTagText;

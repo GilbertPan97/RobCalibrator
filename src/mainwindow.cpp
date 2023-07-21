@@ -117,13 +117,13 @@ nlohmann::json jsonSolXYZQUA(Eigen::VectorXf xyzqua){
         std::cerr << "ERROR: xyzqua size is-" << xyzqua.size() << std::endl;
         exit(-1);
     }
-    js_xyzqua["coordinate"]["x"] = xyzqua[0];
-    js_xyzqua["coordinate"]["y"] = xyzqua[1];
-    js_xyzqua["coordinate"]["z"] = xyzqua[2];
-    js_xyzqua["orientation"]["w"] = xyzqua[3];
-    js_xyzqua["orientation"]["x"] = xyzqua[4];
-    js_xyzqua["orientation"]["y"] = xyzqua[5];
-    js_xyzqua["orientation"]["z"] = xyzqua[6];
+    js_xyzqua["xyz"]["x"] = xyzqua[0];
+    js_xyzqua["xyz"]["y"] = xyzqua[1];
+    js_xyzqua["xyz"]["z"] = xyzqua[2];
+    js_xyzqua["quanternion"]["w"] = xyzqua[3];
+    js_xyzqua["quanternion"]["x"] = xyzqua[4];
+    js_xyzqua["quanternion"]["y"] = xyzqua[5];
+    js_xyzqua["quanternion"]["z"] = xyzqua[6];
 
     return js_xyzqua;
 }
@@ -517,57 +517,38 @@ void MainWindow::createCategoryCalib(SARibbonCategory* page)
     pannel_section->setPannelTitleHeight(30);
 
     /* calibration section */
-    static QString section_path;
     QAction* actNewSection = createAction(tr("New Section"), ":/icon/resource/new.svg");
-    connect(actNewSection, &QAction::triggered, this, [this](){ sectionWidget(false); });
+    connect(actNewSection, &QAction::triggered, this, [this](){ sectionDispWidget(false); });
 
     QAction* actOpenSection = createAction(tr("Open Section"), ":/icon/resource/open.svg");
     connect(actOpenSection, &QAction::triggered, this, [this](){
-        QString section_path_in = QFileDialog::getOpenFileName(
+        m_section_path = QFileDialog::getOpenFileName(
             this,
             QStringLiteral("Open Section."),
             QCoreApplication::applicationDirPath(),
             QStringLiteral("Calibration Section (*.sec)")
         );
 
-        if(section_path_in.isEmpty()){
+        if(m_section_path.isEmpty()){
             std::cout << "WARNING: No section file load.\n";
             return;
         }
 
         // parse json file to m_section
-        std::ifstream js_file_in(section_path_in.toStdString());
+        std::ifstream js_file_in(m_section_path.toStdString());
         m_section = nlohmann::json::parse(js_file_in);
         js_file_in.close();
 
         // display m_section with sectionWidget
-        sectionWidget(true);
-
-        // set section_path (static value) to store save state
-        section_path = section_path_in;
+        sectionDispWidget(true);
 
         // emit update signal to refersh other widget, such as 3D viewer and property browser.
         emit signalUpdateBrowser();
     });
 
     QAction* actSaveSection = createAction(tr("Save Section"), ":/icon/resource/save1.svg");
-    connect(actSaveSection, &QAction::triggered, this, [this](){
-        // get save data and add to section
-        QDateTime currentDateTime = QDateTime::currentDateTime();
-        QString currentTimeString = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
-        m_section["Description"]["SaveTime"] = currentTimeString.toStdString();
+    connect(actSaveSection, &QAction::triggered, this, &MainWindow::saveProjectSection);
 
-        if(section_path.isEmpty())
-            section_path = QFileDialog::getSaveFileName(
-                this, 
-                QStringLiteral("Section Saveing Path."),
-                QCoreApplication::applicationDirPath(), 
-                QStringLiteral("Calibration Section (*.sec)")
-            );
-        std::ofstream json_file_out(section_path.toStdString());
-		json_file_out << std::setw(4) << m_section << std::endl;
-		json_file_out.close();
-    });
     pannel_section->addLargeAction(actNewSection);
     pannel_section->addLargeAction(actOpenSection);
     pannel_section->addLargeAction(actSaveSection);
@@ -676,7 +657,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
             event->ignore();        // ignore the close event
             return;
         } else if (reply == QMessageBox::Yes) {
-            // saveProject();       // save the project
+            saveProjectSection();       // save the project
         }
     }
     QMainWindow::closeEvent(event);
@@ -726,7 +707,7 @@ bool MainWindow::onCalibTriggered()
 
 	// process scan data
 	DataProc proc(scan_lines, CalibObj::SPHERE);
-	float rad_sphere = 25.4 / 2.0;
+	float rad_sphere = m_section["CalibObj"]["Radius"];
 	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere);
     prog->setValue(30);
     QThread::msleep(800);
@@ -816,9 +797,10 @@ void MainWindow::onCalibToolTriggered()
     tool_browser->setFactoryForManager(toolName, toolNameFactory);
     tool_browser->addProperty(item0);
 
-    QtIntPropertyManager* sphereRadius = new QtIntPropertyManager(tool_browser);
-    QtSpinBoxFactory* sphereRadiusFactory = new QtSpinBoxFactory(tool_browser);
+    QtDoublePropertyManager* sphereRadius = new QtDoublePropertyManager(tool_browser);
+    QtDoubleSpinBoxFactory * sphereRadiusFactory = new QtDoubleSpinBoxFactory(tool_browser);
     QtProperty* item1 = sphereRadius->addProperty("Sphere Radius");
+    sphereRadius->setSingleStep(item1, 0.1);
     sphereRadius->setRange(item1, 0, 100);
     tool_browser->setFactoryForManager(sphereRadius, sphereRadiusFactory);
     tool_browser->addProperty(item1);
@@ -911,6 +893,26 @@ void MainWindow::showScanData(QListWidgetItem* item)
     m_ChartViewer->setPointCloud(pointCloud_2d);
 }
 
+void MainWindow::saveProjectSection()
+{
+    // get save data and add to section
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+    QString currentTimeString = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
+    m_section["Description"]["SaveTime"] = currentTimeString.toStdString();
+
+    if(m_section_path.isEmpty())
+        m_section_path = QFileDialog::getSaveFileName(
+            this, 
+            QStringLiteral("Section Saveing Path."),
+            QCoreApplication::applicationDirPath(), 
+            QStringLiteral("Calibration Section (*.sec)")
+        );
+    
+    std::ofstream json_file_out(m_section_path.toStdString());
+    json_file_out << std::setw(4) << m_section << std::endl;
+    json_file_out.close();
+}
+
 void MainWindow::createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar)
 {
     quickAccessBar->addAction(createAction("save", ":/icon/resource/save.svg", "save-quickbar"));
@@ -943,8 +945,8 @@ void MainWindow::createQuickAccessBar(SARibbonQuickAccessBar* quickAccessBar)
     QAction* act_saveLayout = new QAction("Save Layout", menu_view);
     menu_view->addAction(act_loadLayout);
     menu_view->addAction(act_saveLayout);
-    connect(act_loadLayout, &QAction::triggered, this, &MainWindow::restoreState);
-    connect(act_saveLayout, &QAction::triggered, this, &MainWindow::saveState);
+    connect(act_loadLayout, &QAction::triggered, this, &MainWindow::restoreLayoutConfig);
+    connect(act_saveLayout, &QAction::triggered, this, &MainWindow::saveLayoutConfig);
 
     quickAccessBar->addMenu(menu_view);
 
@@ -1048,7 +1050,7 @@ QAction* MainWindow::createAction(const QString& text, const QString& iconurl)
     return act;
 }
 
-void MainWindow::sectionWidget(bool showWithSection)
+void MainWindow::sectionDispWidget(bool showWithSection)
 {
     QWidget* widget_sec = new QWidget();
     QVBoxLayout* layout = new QVBoxLayout();
@@ -1066,56 +1068,57 @@ void MainWindow::sectionWidget(bool showWithSection)
     // config scan data file directory
     QtPathPropertyManager* imgs_dir_manager = new QtPathPropertyManager(sec_browser);
     QtPathEditorFactory* imgs_dir_editor = new QtPathEditorFactory(sec_browser);
-    auto pathValue = imgs_dir_manager->addProperty("Images Directory");
-    imgs_dir_manager->setValue(pathValue, default_path);
+    auto propImgDir = imgs_dir_manager->addProperty("Images Directory");
+    imgs_dir_manager->setValue(propImgDir, default_path);
     sec_browser->setFactoryForManager(imgs_dir_manager, imgs_dir_editor);
-    sec_browser->addProperty(pathValue);
+    sec_browser->addProperty(propImgDir);
 
     // config robot pose file
     QtPathPropertyManager* rob_path_manager = new QtPathPropertyManager(sec_browser);
     QtPathEditorFactory* rob_path_editor = new QtPathEditorFactory(sec_browser);
-    auto pathValue1 = rob_path_manager->addProperty("Robot Data File");
-    rob_path_manager->setValue(pathValue1, default_path);
+    auto propRobFilePath = rob_path_manager->addProperty("Robot Data File");
+    rob_path_manager->setValue(propRobFilePath, default_path);
     sec_browser->setFactoryForManager(rob_path_manager, rob_path_editor);
-    sec_browser->addProperty(pathValue1);
+    sec_browser->addProperty(propRobFilePath);
 
     // config calibrate algorithm
     QtEnumPropertyManager* algor_manager = new QtEnumPropertyManager(sec_browser);
     QtEnumEditorFactory* algor_editor = new QtEnumEditorFactory(sec_browser);
-    auto enumvalue = algor_manager->addProperty("Algorithm");
-    algor_manager->setEnumNames(enumvalue, QStringList() << "Iterative" << "Regression");
+    auto propAlgor = algor_manager->addProperty("Algorithm");
+    algor_manager->setEnumNames(propAlgor, QStringList() << "Iterative" << "Regression");
     sec_browser->setFactoryForManager(algor_manager, algor_editor);
-    sec_browser->addProperty(enumvalue);
+    sec_browser->addProperty(propAlgor);
 
     // config calibrate type
     QtEnumPropertyManager* type_manager = new QtEnumPropertyManager(sec_browser);
     QtEnumEditorFactory* type_editor = new QtEnumEditorFactory(sec_browser);
-    auto enumvalue1 = type_manager->addProperty("Calibrate type");
-    type_manager->setEnumNames(enumvalue1, QStringList() << "EyeInHand" << "EyeToHand");
+    auto propCalibType = type_manager->addProperty("Calibrate type");
+    type_manager->setEnumNames(propCalibType, QStringList() << "EyeInHand" << "EyeToHand");
     sec_browser->setFactoryForManager(type_manager, type_editor);
-    sec_browser->addProperty(enumvalue1);
+    sec_browser->addProperty(propCalibType);
 
     // config calibrate objection 
     QtGroupPropertyManager* calibObjManager = new QtGroupPropertyManager(sec_browser);
-    QtProperty *item0 = calibObjManager->addProperty("Calibrate Objection");
+    QtProperty* propCalibObj = calibObjManager->addProperty("Calibrate Objection");
 
     QtEnumPropertyManager* ObjNameManager = new QtEnumPropertyManager(sec_browser);
     QtEnumEditorFactory* ObjNameFactory = new QtEnumEditorFactory(sec_browser);
-    QtProperty* item1 = ObjNameManager->addProperty("Name");
-    ObjNameManager->setEnumNames(item1, QStringList() << "Sphere" << "Block" << "Board");
+    QtProperty* propCalibObjName = ObjNameManager->addProperty("Name");
+    ObjNameManager->setEnumNames(propCalibObjName, QStringList() << "Sphere" << "Block" << "Board");
     sec_browser->setFactoryForManager(ObjNameManager, ObjNameFactory);
-    item0->addSubProperty(item1);
+    propCalibObj->addSubProperty(propCalibObjName);
 
-    QtIntPropertyManager* sphereRadiusManager = new QtIntPropertyManager(sec_browser);
-    QtSpinBoxFactory* sphereRadiusFactory = new QtSpinBoxFactory(sec_browser);
-    QtProperty* item2 = sphereRadiusManager->addProperty("Sphere Radius");
-    sphereRadiusManager->setRange(item2, 0, 100);
+    QtDoublePropertyManager* sphereRadiusManager = new QtDoublePropertyManager(sec_browser);
+    QtDoubleSpinBoxFactory* sphereRadiusFactory = new QtDoubleSpinBoxFactory(sec_browser);
+    QtProperty* propCalibObjPara = sphereRadiusManager->addProperty("Sphere Radius");
+    sphereRadiusManager->setSingleStep(propCalibObjPara, 0.1);
+    sphereRadiusManager->setRange(propCalibObjPara, 0, 100);
     sec_browser->setFactoryForManager(sphereRadiusManager, sphereRadiusFactory);
-    item0->addSubProperty(item2);
+    propCalibObj->addSubProperty(propCalibObjPara);
 
     // QtSpinBoxFactory *calibObjFactory = new QtSpinBoxFactory(sec_browser);
     // sec_browser->setFactoryForManager(calibObjManager->subIntPropertyManager(), calibObjFactory);
-    sec_browser->addProperty(item0);
+    sec_browser->addProperty(propCalibObj);
     layout->addWidget(sec_browser);
 
     // Load section to section Widget
@@ -1124,22 +1127,35 @@ void MainWindow::sectionWidget(bool showWithSection)
         description->setText(QString::fromStdString(desc));
 
         std::string img_dir = m_section["Dataset"]["ImagesDir"];
-        imgs_dir_manager->setValue(pathValue, QString::fromStdString(img_dir));
+        imgs_dir_manager->setValue(propImgDir, QString::fromStdString(img_dir));
 
         std::string rob_path = m_section["Dataset"]["RobPosesFile"];
-        rob_path_manager->setValue(pathValue1, QString::fromStdString(rob_path));
+        rob_path_manager->setValue(propRobFilePath, QString::fromStdString(rob_path));
 
         std::string calib_type = m_section["Config"]["CalibType"];
         if(calib_type == "EyeInHand")
-            type_manager->setValue(enumvalue1, 0);
+            type_manager->setValue(propCalibType, 0);
         else
-            type_manager->setValue(enumvalue1, 1);
+            type_manager->setValue(propCalibType, 1);
         
         std::string calib_algor = m_section["Config"]["CalibAlgor"];
         if(calib_algor == "Iterative")
-            algor_manager->setValue(enumvalue, 0);
+            algor_manager->setValue(propAlgor, 0);
         else
-            algor_manager->setValue(enumvalue, 0);
+            algor_manager->setValue(propAlgor, 1);
+
+        std::string calib_obj = m_section["CalibObj"]["Name"];
+        if(calib_obj == "Sphere"){
+            ObjNameManager->setValue(propCalibObjName, 0);
+            sphereRadiusManager->setValue(propCalibObjPara, m_section["CalibObj"]["Radius"]);
+        }
+        else if (calib_obj == "Block")
+            ObjNameManager->setValue(propCalibObjName, 1);
+        else if (calib_obj == "Board")
+            ObjNameManager->setValue(propCalibObjName, 2);
+        else
+            std::cerr << "ERROR: Wrong calibration objection name.\n";
+        
     }
 
     // save calib config to section 
@@ -1159,24 +1175,31 @@ void MainWindow::sectionWidget(bool showWithSection)
         };
 
         // section: Dataset
-        auto imgs_dir = imgs_dir_manager->value(pathValue);
-        auto rob_pose_file = rob_path_manager->value(pathValue1);
+        auto imgs_dir = imgs_dir_manager->value(propImgDir);
+        auto rob_pose_file = rob_path_manager->value(propRobFilePath);
         m_section["Dataset"] = {
             {"ImagesDir", imgs_dir.toStdString()},
             {"RobPosesFile", rob_pose_file.toStdString()}
         };
 
         // section: Config
-        auto id_algor = algor_manager->value(enumvalue);
-        auto id_type = type_manager->value(enumvalue1);
+        auto id_algor = algor_manager->value(propAlgor);
+        auto id_type = type_manager->value(propCalibType);
         m_section["Config"] = {
-            {"CalibAlgor", algor_manager->enumNames(enumvalue).at(id_algor).toStdString()},
-            {"CalibType", type_manager->enumNames(enumvalue1).at(id_type).toStdString()}
+            {"CalibAlgor", algor_manager->enumNames(propAlgor).at(id_algor).toStdString()},
+            {"CalibType", type_manager->enumNames(propCalibType).at(id_type).toStdString()}
         };
-        // m_section["Solution"] = { {"HTM", }, {"xyzwpr", } },
+
+        // section: Calib objection
+        auto id_calibObj = ObjNameManager->value(propCalibObjName);
+        m_section["CalibObj"] = {
+            {"Name", ObjNameManager->enumNames(propCalibObjName).at(id_calibObj).toStdString()},
+            {"Radius", sphereRadiusManager->value(propCalibObjPara)}
+        };
 
         delete widget_sec; 
     });
+
     QPushButton* cancelBtn = new QPushButton("Cancel");
     connect(cancelBtn, &QPushButton::released, this, [=](){ delete widget_sec; });
     v_layout->addWidget(setBtn);
@@ -1247,7 +1270,7 @@ void MainWindow::restorePerspective()
 }
 
 //============================================================================
-void MainWindow::saveState()
+void MainWindow::saveLayoutConfig()
 {
 	QSettings Settings("Settings.ini", QSettings::IniFormat);
 	Settings.setValue("mainWindow/Geometry", this->saveGeometry());
@@ -1256,7 +1279,7 @@ void MainWindow::saveState()
 
 
 //============================================================================
-void MainWindow::restoreState()
+void MainWindow::restoreLayoutConfig()
 {
 	QSettings Settings1("Settings.ini", QSettings::IniFormat);
 	this->restoreGeometry(Settings1.value("mainWindow/Geometry").toByteArray());
