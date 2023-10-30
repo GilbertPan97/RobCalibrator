@@ -61,6 +61,7 @@ target_include_directories(${SFRCALIB_MAINWIN}  PRIVATE
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtDataViewer"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/QtPropertyBrowser"
                     "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/Calibrator"
+                    "${CMAKE_CURRENT_SOURCE_DIR}/SfrCalibLibs/CamManager"
                     ${EIGEN3_INCLUDE_DIRS})
 message(STATUS "Sfr calibration bin dir is: ${SFRCALIB_BIN_NAME}")
 
@@ -69,7 +70,8 @@ target_link_libraries(${SFRCALIB_MAINWIN} PRIVATE
                       QtPropertyBrowser
                       QtDataViewer
                       SARibbonBar
-                      Calibrator)
+                      Calibrator
+                      CamManager)
 
 target_link_libraries(${SFRCALIB_MAINWIN} PUBLIC
                       Qt${QT_VERSION_MAJOR}::Core 

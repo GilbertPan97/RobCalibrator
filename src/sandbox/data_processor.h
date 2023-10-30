@@ -18,10 +18,11 @@
 
 class DataProc {
 private:
-    CalibObj calib_obj_;                            // calibration object
-    std::vector<std::vector<cv::Point3f>> scan_lines_;          // original scan lines data
+    CalibObj calib_obj_;                           // calibration object
+    std::vector<std::vector<cv::Point3f>> scan_lines_;      // original scan line data
 
     // if process object is: sphere
+    std::vector<std::vector<cv::Point3f>> circle_lines_;    // filter background points
     std::vector<cv::Point3f> ctr_pnts_;         // sphere center points (camera frame)
 
     // if process object is: block
@@ -32,26 +33,17 @@ private:
     std::vector<cv::Point3f> tri_edge1_;        // triangle edge 1 (right side)
 
 public:
-    std::vector<std::vector<cv::Point3f>> filtered_lines_;      // filtered scan lines data
-
-public:
     DataProc();
 
     DataProc(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj);
 
     void SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, CalibObj obj);
 
-    bool SetDataFilter(float eps_noise, int minPts_noise, float rad_backg, int minPts_backg);
-
-    bool SetSingleDataFilter(size_t dataIndex, float eps_noise, int minPts_noise, float rad_backg, int minPts_backg);
-
-    std::vector<cv::Point3f> CalcSphereCtrs(float rad_sphere, std::string dirY_sCtrInCam = "+Y");          // used for calib obj: sphere
+    std::vector<cv::Point3f> CalcSphereCtrs(float rad_sphere);          // used for calib obj: sphere
 
     std::vector<std::vector<cv::Point3f>> CalcTriEdgePntsInCamera();    // used for calib obj: calib board
 
     std::vector<std::vector<cv::Point3f>> CalcTriEdgePntsInRobase(Eigen::Vector<float, 6> vec_pose_board, Eigen::Vector3f tri_vert, float tri_angle);
-
-    std::vector<cv::Point3f> CalcBlockEdgePnts(int id_corner, float tolerance);
 
 private:
     std::vector<cv::Point3f> FilterBackground(std::vector<cv::Point3f> filter_line, float eps, int minPts);
@@ -62,7 +54,7 @@ private:
 
     bool is_circle_PntCloud(std::vector<cv::Point3f> cluster, cv::Point3f center, float rmse_thresh);
 
-    std::vector<cv::Point3f> radiusOutlierRemoval(const std::vector<cv::Point3f>& points, int minPts, float radius);
+    std::vector<cv::Point3f> radiusOutlierRemoval(const std::vector<cv::Point3f>& points, int k, float radius);
 
     void fitCircle(const std::vector<cv::Point2f>& points, cv::Point2f& center, float& radius, bool display = false);
 

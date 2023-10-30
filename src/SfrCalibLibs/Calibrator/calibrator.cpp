@@ -231,7 +231,7 @@ namespace LineScanner
         return CalibUtils::HTMToXYZQUAVec(mtr_cam2rob_);
     }
 
-    bool HandEyeCalib::CalcCalibError(std::vector<float>& dist_ctr_pnts, float calib_error){
+    bool HandEyeCalib::CalcCalibError(std::vector<float>& dist_ctr_pnts, float& calib_error){
         // check calibration restlt
         if (mtr_cam2rob_.hasNaN()){
             std::cout << "ERROR: Calib result is empty." << std::endl;

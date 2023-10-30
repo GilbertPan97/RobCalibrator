@@ -25,39 +25,7 @@ void DataProc::SetScanData(std::vector<std::vector<cv::Point3f>> scan_lines, Cal
     calib_obj_ = obj;
 }
 
-bool DataProc::SetDataFilter(float eps_noise, int minPts_noise, float rad_backg, int minPts_backg){
-    
-    for(const std::vector<cv::Point3f> & scan_line: scan_lines_){
-        // filter noise data
-        std::vector<cv::Point3f> filter_line0 = radiusOutlierRemoval(scan_line, minPts_noise, eps_noise);
-
-        // filter background points
-        std::cout << "INFO: Filter background by cluster. \n";
-        std::vector<cv::Point3f> filter_line1 = FilterBackground(filter_line0, rad_backg, minPts_backg);
-        filtered_lines_.push_back(filter_line1);
-    }
-
-    return true;
-}
-
-bool DataProc::SetSingleDataFilter(size_t dataIndex, float eps_noise, int minPts_noise, float rad_backg, int minPts_backg){
-    if(dataIndex - 1 < 0){
-        std::cout << "ERROR: Data index range should be: 1 ~ nbrData.\n";
-        return false;
-    }
-    auto scanline = scan_lines_[dataIndex - 1];
-    // filter noise data
-    std::vector<cv::Point3f> filter_line0 = radiusOutlierRemoval(scanline, minPts_noise, eps_noise);
-
-    // filter background points
-    std::cout << "INFO: Filter background by cluster. \n";
-    std::vector<cv::Point3f> filter_line1 = FilterBackground(filter_line0, rad_backg, minPts_backg);
-    filtered_lines_[dataIndex - 1] = filter_line1;
-
-    return true;
-}
-
-std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere, std::string dirY_sCtrInCam){
+std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere){
     // check calibrate object
     if(calib_obj_ != CalibObj::SPHERE){
         std::cout << "ERROR: Calibration object is not set or fault.\n";
@@ -70,8 +38,19 @@ std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere, std::string 
         exit(-3);
     }
 
-    // filter background pnts and noise (get filtered_lines_: circle lines)
-    SetDataFilter(1.0, 3, 2.0, 10);
+    // filter background pnts and noise (get circle_lines_)
+    for(const std::vector<cv::Point3f> & scan_line: scan_lines_){
+        // filter noise data
+        std::vector<cv::Point3f> filter_line = radiusOutlierRemoval(scan_line, 3, 1.0);
+
+        // filter background points
+        std::cout << "INFO: Filter background by cluster. \n";
+        std::vector<cv::Point3f> circle_line = FilterBackground(filter_line, 2.0, 10);
+        circle_lines_.push_back(circle_line);
+
+        // view procession point cloud
+        // viewer_3D(circle_line, circle_line);
+    }
 
     // calculate sphere centers (camera frame) under different robot pose
     std::vector<cv::Point3f> ctr_pnts;
@@ -79,10 +58,10 @@ std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere, std::string 
     cv::Point3f ctr_sphere;
     float rad_arc;          // radius of tangential arc of a sphere
     float dis_ctr;          // distance between arc center and sphere center
-    for (size_t i = 0; i < filtered_lines_.size(); i++)
+    for (size_t i = 0; i < circle_lines_.size(); i++)
     {
         std::vector<cv::Point2f> circle_line_2d;
-        for(const cv::Point3f & pnt: filtered_lines_[i]){
+        for(const cv::Point3f & pnt: circle_lines_[i]){
             cv::Point2f pnt_2d;
             pnt_2d.x = pnt.x;
             pnt_2d.y = pnt.z;   // pnt.y = 0
@@ -99,16 +78,8 @@ std::vector<cv::Point3f> DataProc::CalcSphereCtrs(float rad_sphere, std::string 
             exit(-3);
         }
         
-        if (dirY_sCtrInCam == "+Y") {
-            ctr_sphere = cv::Point3f(ctr_arc.x, dis_ctr, ctr_arc.y);
-        }
-        else if(dirY_sCtrInCam == "-Y"){
-            ctr_sphere = cv::Point3f(ctr_arc.x, -dis_ctr, ctr_arc.y);
-        }
-        else {
-            std::cerr << "ERROR: dirY_sCtrInCam is illegal.\n";
-        }
-        
+        // @FIXME: what is sphere center direction
+        ctr_sphere = cv::Point3f(ctr_arc.x, dis_ctr, ctr_arc.y);
         ctr_pnts_.push_back(ctr_sphere);
     }
     
@@ -179,46 +150,16 @@ std::vector<std::vector<cv::Point3f>> DataProc::CalcTriEdgePntsInRobase(Eigen::V
     return {tri_edge0_rob, tri_edge1_rob};
 }
 
-std::vector<cv::Point3f> DataProc::CalcBlockEdgePnts(int id_corner, float tolerance)
-{
-    // check calibrate object
-    if(calib_obj_ != CalibObj::BLOCK){
-        std::cout << "ERROR: Calibration object is not set or fault.\n";
-        exit(-3);
-    }
-
-    // check scan_lines_
-    if(scan_lines_.size() == 0 || filtered_lines_.size() == 0){
-        std::cout << "ERROR: No scan data or not set filter.\n";
-        exit(-3);
-    }
-
-    for(const auto & polyline: filtered_lines_){
-        // Extract the corner points from polyline
-        std::vector<cv::Point3f> corners = getCornerPoints(polyline, tolerance);
-        
-        // // check view
-        // viewer_3D(polyline, corners);
-
-        // FIXME: which corners should be add to block edge points
-        block_edge_.push_back(corners[id_corner - 1]);
-    }
-
-    return block_edge_;
-}
-
 /**********************************************************************/
 
 /************************** private function **************************/
 
 /**********************************************************************/
-
 std::vector<cv::Point3f> DataProc::FilterBackground(std::vector<cv::Point3f> filter_line, float eps, int minPts){
 
     // Cluster the points using DBSCAN
     std::vector<int> labels(filter_line.size(), -1);
     dbscan(filter_line, eps, minPts, labels);
-
     // Separate the points into clusters
     std::vector<std::vector<cv::Point3f>> clusters;
     for (int i = 0; i < labels.size(); i++) {
@@ -329,7 +270,7 @@ bool DataProc::is_circle_PntCloud(std::vector<cv::Point3f> cluster, cv::Point3f 
         return true;
 }
 
-std::vector<cv::Point3f> DataProc::radiusOutlierRemoval(const std::vector<cv::Point3f>& points, int minPts, float radius) {
+std::vector<cv::Point3f> DataProc::radiusOutlierRemoval(const std::vector<cv::Point3f>& points, int k, float radius) {
 
     // filter invalid points
     std::vector<cv::Point3f> valid_line;
@@ -346,14 +287,14 @@ std::vector<cv::Point3f> DataProc::radiusOutlierRemoval(const std::vector<cv::Po
     for (const auto& p : valid_line) {
         std::vector<float> distances;
         for (const auto& q : valid_line) {
-            if (p != q) {
-                float distance = cv::norm(p - q);
-                distances.push_back(distance);
-            }
+        if (p != q) {
+            float distance = cv::norm(p - q);
+            distances.push_back(distance);
         }
-        std::sort(distances.begin(), distances.end());  // default ascending order
-        if (distances[minPts] < radius) {
-            filteredPoints.push_back(p);
+        }
+        std::sort(distances.begin(), distances.end());
+        if (distances[k] < radius) {
+        filteredPoints.push_back(p);
         }
     }
 

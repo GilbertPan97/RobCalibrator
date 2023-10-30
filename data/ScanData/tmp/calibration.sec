@@ -1,0 +1,68 @@
+{
+    "CalibObj": {
+        "Name": "Sphere",
+        "Radius": 12.7
+    },
+    "Config": {
+        "CalibAlgor": "Iterative",
+        "CalibType": "EyeInHand"
+    },
+    "Dataset": {
+		"Number": 15,
+        "ImagesDir": "C:/Users/GilbertPan/Documents/Github_WS/RobCalibrator/data/ScanData",
+        "RobPosesFile": "C:/Users/GilbertPan/Documents/Github_WS/RobCalibrator/data/ScanData/RobPoses.rob"
+    },
+    "Description": {
+        "Label": "Used for hand-eye calibration with AT camera",
+        "SaveTime": "2023-10-30 10:09:27"
+    },
+    "Solution": {
+        "HTM": [
+            [
+                -0.6521293520927429,
+                0.7562397122383118,
+                -0.05318702012300491,
+                78.45849609375
+            ],
+            [
+                0.7580237984657288,
+                0.6514943242073059,
+                -0.030901385471224785,
+                -12.341071128845215
+            ],
+            [
+                0.011282200925052166,
+                -0.06046873703598976,
+                -0.9981062412261963,
+                264.4588623046875
+            ],
+            [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        ],
+        "xyzQua": {
+            "quanternion": {
+                "w": -0.01773991994559765,
+                "x": 0.41667813062667847,
+                "y": 0.9085331559181213,
+                "z": -0.025142209604382515
+            },
+            "xyz": {
+                "x": 78.45849609375,
+                "y": -12.341071128845215,
+                "z": 264.4588623046875
+            }
+        },
+        "xyzwpr": [
+            78.45849609375,
+            -12.341071128845215,
+            264.4588623046875,
+            -176.53305053710938,
+            -0.646436333656311,
+            130.70547485351563
+        ]
+    }
+}

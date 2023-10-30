@@ -229,7 +229,7 @@ namespace LineScanner
 
 } // namespace LineScanner
 
-namespace Camera
-{
+// namespace Camera
+// {
 
-} // namespace Camera
+// } // namespace Camera

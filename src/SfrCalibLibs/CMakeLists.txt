@@ -9,3 +9,5 @@ add_subdirectory(SARibbonBar)
 add_subdirectory(QtAdvancedDocking)
 
 add_subdirectory(Calibrator)
+
+add_subdirectory(CamManager)

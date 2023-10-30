@@ -70,7 +70,7 @@ namespace LineScanner
 
         Eigen::Vector<float, 7> GetCalcResultXYZQUA();
 
-        bool CalcCalibError(std::vector<float>& dist_ctr_pnts, float calib_error);
+        bool CalcCalibError(std::vector<float>& dist_ctr_pnts, float& calib_error);
 
     private:
         void drawClusters(cv::Mat& img, 

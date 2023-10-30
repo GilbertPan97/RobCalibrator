@@ -9,7 +9,7 @@ build*
 ~*.pptx
 ~*.docx
 
-# vscode 的隐藏文件
+# vscode file 
 /.vscode
 
 # third party files

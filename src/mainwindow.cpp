@@ -19,6 +19,7 @@
 #include "data_processor.h"
 #include "calibrator.h"
 #include "algorithm.h"
+#include "SFRSensorManager.h"
 
 #include "DockManager.h"
 #include "DockWidget.h"
@@ -152,14 +153,15 @@ MainWindow::MainWindow(QWidget* par) :
     // construct ribbon bar
     SARibbonBar* ribbon = ribbonBar();
     ribbon->setContentsMargins(5, 0, 5, 0);
-    this->loadQssStyle(ribbon);
+    // this->loadQssStyle(ribbon);
 
     // set robot connect checker
     ribbon->applicationButton()->setText(("   HardWare   "));
-    connect(ribbon->applicationButton(), &QAbstractButton::released, this, [](){
-        QWidget* w = new QWidget();
-        w->resize(800, 400);
-        w->show();
+    SFRSensorManager* camManager = SFRSensorManager::getInstance();
+    connect(ribbon->applicationButton(), &QAbstractButton::released, this, [=](){
+        camManager->setWindowTitle("Camera Manager");
+        camManager->resize(800, 400);
+        camManager->show();
         QApplication::processEvents();
     });
     
@@ -170,13 +172,13 @@ MainWindow::MainWindow(QWidget* par) :
     createCategoryCalib(cat_3dScanner);
     ribbon->addCategoryPage(cat_3dScanner);
 
-    // TODO: add camera hand-eye calibrator
-#ifdef CAMERA_PLUGIN
-    SARibbonCategory* cat_2dCamera = new SARibbonCategory();
-    cat_2dCamera->setCategoryName(tr("   CamCalibrator   "));
-    cat_2dCamera->setObjectName(("CamCalibrator"));
-    ribbon->addCategoryPage(cat_2dCamera);
-#endif
+//     // TODO: add camera hand-eye calibrator
+// #ifdef CAMERA_PLUGIN
+//     SARibbonCategory* cat_2dCamera = new SARibbonCategory();
+//     cat_2dCamera->setCategoryName(tr("   CamCalibrator   "));
+//     cat_2dCamera->setObjectName(("CamCalibrator"));
+//     ribbon->addCategoryPage(cat_2dCamera);
+// #endif
 
     // add 2D & 3D viewer, and QtPropertyBrowser
     m_dockManager = new ads::CDockManager(this);
@@ -672,7 +674,7 @@ bool MainWindow::onCalibTriggered()
     }
 
     QDialog dlg(this);
-    dlg.resize(1080, 400);
+    dlg.resize(1080, 600);
     QVBoxLayout* layout = new QVBoxLayout(&dlg);
     QProgressBar* prog = new QProgressBar(&dlg);
     prog->setRange(0, 100);
@@ -689,11 +691,12 @@ bool MainWindow::onCalibTriggered()
 
     std::string ImgSaveDir = m_section["Dataset"]["ImagesDir"];
     // Read scan lines data
-	int snap_cnt = 10;
+	int snap_cnt = 15;      // @FIXME: the calibration data should be writen to section
 	std::vector<std::vector<cv::Point3f>> scan_lines;
 	for (size_t i = 0; i < snap_cnt; i++){
-		// read from yml file
-		std::string file_path = ImgSaveDir + "/" + std::to_string(i + 1) + "_3C_line.yml";
+		// read from yml file, @TODO: what is the name sequence of files
+        std::string file_name = "p" + std::to_string(i + 1) + ".yml";
+		std::string file_path = ImgSaveDir + "/" + file_name;
 
 		std::vector<cv::Point3f> scan_line;
 		cv::FileStorage fs(file_path, cv::FileStorage::READ);
@@ -705,14 +708,14 @@ bool MainWindow::onCalibTriggered()
     prog->setValue(10);
     QThread::msleep(800);       // wait 800ms 
 
-	// process scan data
+	// Process scan data, @TODO: expose sphere center direction interface
 	DataProc proc(scan_lines, CalibObj::SPHERE);
 	float rad_sphere = m_section["CalibObj"]["Radius"];
-	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere);
+	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, "-Y");
     prog->setValue(30);
     QThread::msleep(800);
 
-	// read robot pose data
+	// Read robot pose data
 	std::string rob_js_path = m_section["Dataset"]["RobPosesFile"];
 	std::vector<Eigen::Vector<float, 6>> vec_rob_pose;
     
@@ -728,7 +731,7 @@ bool MainWindow::onCalibTriggered()
     prog->setValue(50);
     QThread::msleep(800);
 
-	// build calibration
+	// Create calibration handle
 	LineScanner::HandEyeCalib hec;
 
 	hec.SetRobPose(vec_rob_pose);
@@ -737,6 +740,7 @@ bool MainWindow::onCalibTriggered()
     prog->setValue(70);
     QThread::msleep(800);
 
+    // @TODO: expose solver method optional 
 	hec.run(LineScanner::SolveMethod::ITERATION);
     prog->setValue(100);
 
@@ -750,35 +754,47 @@ bool MainWindow::onCalibTriggered()
 
     // save result to section
     m_section["Solution"] = {
-        {"xyzwpr", sol_xyzwpr},
-        {"HTM", {
+        { "xyzwpr", sol_xyzwpr },
+        { "HTM", {
             {sol_mtr(0,0), sol_mtr(0,1), sol_mtr(0,2), sol_mtr(0,3)},
             {sol_mtr(1,0), sol_mtr(1,1), sol_mtr(1,2), sol_mtr(1,3)},
             {sol_mtr(2,0), sol_mtr(2,1), sol_mtr(2,2), sol_mtr(2,3)},
             {sol_mtr(3,0), sol_mtr(3,1), sol_mtr(3,2), sol_mtr(3,3)} }
         },
-        {"xyzQua", jsonSolXYZQUA(sol_xyzQua)
-        }
+        { "xyzQua", jsonSolXYZQUA(sol_xyzQua) }
     };
 
     emit signalUpdateStatusBar("Calibration finished.");
 
-    // printf calibration result
+    // Print calibration result
     Eigen::IOFormat fmt(Eigen::FullPrecision, 0, ", ", ";\n", "[", "]", "[", "]");
     std::ostringstream stream;
     stream << sol_mtr.format(fmt);
     std::string msg = stream.str() + "\n";
+    textbrowser->append("INFO: Calibration result in matrix format:");
+    textbrowser->append(QString::fromStdString(msg));
 
     std::string msg1;
     msg1 += "[";
-    for (const auto& elem : dis_ctr)
+    for (const auto& elem : sol_xyzwpr)
         msg1 += std::to_string(elem) + " ";
-    msg1 += "]"; 
-    
-    textbrowser->append("INFO: Calibration result in matrix format:");
-    textbrowser->append(QString::fromStdString(msg));
-    textbrowser->append("INFO: The distance of center point in robot base frame is:");
+    msg1 += "]\n";
+    textbrowser->append("INFO: Calibration result in XYZWPR format:");
     textbrowser->append(QString::fromStdString(msg1));
+
+    std::string msg2;
+    msg2 += "[";
+    for (const auto& elem : dis_ctr)
+        msg2 += std::to_string(elem) + " ";
+    msg2 += "]\n";
+    textbrowser->append("INFO: The distance of center point in robot base frame is:");
+    textbrowser->append(QString::fromStdString(msg2));
+
+    std::string msg3;
+    msg3 += "INFO: Calibration error is: [ ";
+    msg3 += std::to_string(err);
+    msg3 += " ]\n";
+    textbrowser->append(QString::fromStdString(msg3));
     
     dlg.exec();
 
