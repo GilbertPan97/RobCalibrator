@@ -11,7 +11,7 @@ message(STATUS "SfrCalib version is: ${SFRCALIB_VERSION}")
 set(THIRD_PARTY "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 project(SfrCalib VERSION ${SFRCALIB_VERSION})
 
-option(BUILD_EXAMPLES "build the examples." ON)
+option(BUILD_EXAMPLES "build the examples." OFF)
 option(BUILD_DESIGNERPLUGIN "build the Designer Plugin." OFF)
 option(SCANNE_PLUGIN "Plugin line scanner hand-eye calibration tool." ON)
 option(CAMERA_PLUGIN "Plugin 2d camera hand-eye calibration tool." ON)

@@ -159,10 +159,28 @@ MainWindow::MainWindow(QWidget* par) :
     ribbon->applicationButton()->setText(("   HardWare   "));
     SFRSensorManager* camManager = SFRSensorManager::getInstance();
     connect(ribbon->applicationButton(), &QAbstractButton::released, this, [=](){
+        QFile file("config.txt");
+        if(file.exists()){
+            if(file.open(QIODevice::ReadOnly))
+            {
+                QTextStream in(&file);
+                QString config;
+                in>>config;
+                camManager->load(config);
+                file.close();
+            }
+        }
         camManager->setWindowTitle("Camera Manager");
         camManager->resize(800, 400);
-        camManager->show();
+        camManager->showNormal();
         QApplication::processEvents();
+
+        // QFile file2("config.txt");
+        // if(file2.open(QIODevice::WriteOnly)){
+        //     QTextStream out(&file2);
+        //     out << camManager->save();
+        //     file2.close();
+        // }
     });
     
     // add 3D line scanner calib ribbon
@@ -469,7 +487,7 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
     connect(this, &MainWindow::signalUpdateBrowser, this, [this](){
         // check m_section
         if(m_section["Dataset"]["ImagesDir"].empty()){
-            std::cout << "ERROR: Images directory is empty.\n";
+            std::cerr << "ERROR: Images directory is empty.\n";
             return;
         }
 
@@ -479,7 +497,7 @@ ads::CDockWidget* MainWindow::createDataBrowserDockWidget()
 
         QDir folder(folderPath);
         if (!folder.exists()) {
-            std::cout << "ERROR: YML folder is not exist!\n";
+            std::cerr << "ERROR: YML folder is not exist!\n";
             return;
         }
 
@@ -691,7 +709,7 @@ bool MainWindow::onCalibTriggered()
 
     std::string ImgSaveDir = m_section["Dataset"]["ImagesDir"];
     // Read scan lines data
-	int snap_cnt = 15;      // @FIXME: the calibration data should be writen to section
+	int snap_cnt = m_section["Dataset"]["NbrData"];      // @FIXME: the calibration data should be writen to section
 	std::vector<std::vector<cv::Point3f>> scan_lines;
 	for (size_t i = 0; i < snap_cnt; i++){
 		// read from yml file, @TODO: what is the name sequence of files
@@ -711,7 +729,8 @@ bool MainWindow::onCalibTriggered()
 	// Process scan data, @TODO: expose sphere center direction interface
 	DataProc proc(scan_lines, CalibObj::SPHERE);
 	float rad_sphere = m_section["CalibObj"]["Radius"];
-	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, "-Y");
+    std::string dirc_sphCtr = m_section["CalibObj"]["SphCtrDirc"];
+	std::vector<cv::Point3f> ctr_pnts = proc.CalcSphereCtrs(rad_sphere, dirc_sphCtr);
     prog->setValue(30);
     QThread::msleep(800);
 
@@ -1082,35 +1101,44 @@ void MainWindow::sectionDispWidget(bool showWithSection)
     layout->addWidget(description);
 
     // config scan data file directory
-    QtPathPropertyManager* imgs_dir_manager = new QtPathPropertyManager(sec_browser);
-    QtPathEditorFactory* imgs_dir_editor = new QtPathEditorFactory(sec_browser);
-    auto propImgDir = imgs_dir_manager->addProperty("Images Directory");
-    imgs_dir_manager->setValue(propImgDir, default_path);
-    sec_browser->setFactoryForManager(imgs_dir_manager, imgs_dir_editor);
+    QtPathPropertyManager* imgsDirManager = new QtPathPropertyManager(sec_browser);
+    QtPathEditorFactory* imgsDirFactory = new QtPathEditorFactory(sec_browser);
+    auto propImgDir = imgsDirManager->addProperty("Images Directory");
+    imgsDirManager->setValue(propImgDir, default_path);
+    sec_browser->setFactoryForManager(imgsDirManager, imgsDirFactory);
     sec_browser->addProperty(propImgDir);
 
     // config robot pose file
-    QtPathPropertyManager* rob_path_manager = new QtPathPropertyManager(sec_browser);
-    QtPathEditorFactory* rob_path_editor = new QtPathEditorFactory(sec_browser);
-    auto propRobFilePath = rob_path_manager->addProperty("Robot Data File");
-    rob_path_manager->setValue(propRobFilePath, default_path);
-    sec_browser->setFactoryForManager(rob_path_manager, rob_path_editor);
+    QtPathPropertyManager* robPathManager = new QtPathPropertyManager(sec_browser);
+    QtPathEditorFactory* robPathFactory = new QtPathEditorFactory(sec_browser);
+    auto propRobFilePath = robPathManager->addProperty("Robot Data File");
+    robPathManager->setValue(propRobFilePath, default_path);
+    sec_browser->setFactoryForManager(robPathManager, robPathFactory);
     sec_browser->addProperty(propRobFilePath);
 
+    // @TODO: add 
+    QtIntPropertyManager* nbrDataManager = new QtIntPropertyManager(sec_browser);
+    QtSpinBoxFactory* nbrDataFactory = new QtSpinBoxFactory(sec_browser);
+    QtProperty* propNbrData = nbrDataManager->addProperty("Number of data");
+    nbrDataManager->setSingleStep(propNbrData, 1);
+    nbrDataManager->setRange(propNbrData, 0, 100);
+    sec_browser->setFactoryForManager(nbrDataManager, nbrDataFactory);
+    sec_browser->addProperty(propNbrData);
+
     // config calibrate algorithm
-    QtEnumPropertyManager* algor_manager = new QtEnumPropertyManager(sec_browser);
-    QtEnumEditorFactory* algor_editor = new QtEnumEditorFactory(sec_browser);
-    auto propAlgor = algor_manager->addProperty("Algorithm");
-    algor_manager->setEnumNames(propAlgor, QStringList() << "Iterative" << "Regression");
-    sec_browser->setFactoryForManager(algor_manager, algor_editor);
+    QtEnumPropertyManager* algorManager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* algorFactory = new QtEnumEditorFactory(sec_browser);
+    auto propAlgor = algorManager->addProperty("Algorithm");
+    algorManager->setEnumNames(propAlgor, QStringList() << "Iterative" << "Regression");
+    sec_browser->setFactoryForManager(algorManager, algorFactory);
     sec_browser->addProperty(propAlgor);
 
     // config calibrate type
-    QtEnumPropertyManager* type_manager = new QtEnumPropertyManager(sec_browser);
-    QtEnumEditorFactory* type_editor = new QtEnumEditorFactory(sec_browser);
-    auto propCalibType = type_manager->addProperty("Calibrate type");
-    type_manager->setEnumNames(propCalibType, QStringList() << "EyeInHand" << "EyeToHand");
-    sec_browser->setFactoryForManager(type_manager, type_editor);
+    QtEnumPropertyManager* calibTypeManager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* calibTypeFactory = new QtEnumEditorFactory(sec_browser);
+    auto propCalibType = calibTypeManager->addProperty("Calibrate type");
+    calibTypeManager->setEnumNames(propCalibType, QStringList() << "EyeInHand" << "EyeToHand");
+    sec_browser->setFactoryForManager(calibTypeManager, calibTypeFactory);
     sec_browser->addProperty(propCalibType);
 
     // config calibrate objection 
@@ -1123,6 +1151,13 @@ void MainWindow::sectionDispWidget(bool showWithSection)
     ObjNameManager->setEnumNames(propCalibObjName, QStringList() << "Sphere" << "Block" << "Board");
     sec_browser->setFactoryForManager(ObjNameManager, ObjNameFactory);
     propCalibObj->addSubProperty(propCalibObjName);
+
+    QtEnumPropertyManager* sphereCtrDircManager = new QtEnumPropertyManager(sec_browser);
+    QtEnumEditorFactory* sphereCtrDircFactory = new QtEnumEditorFactory(sec_browser);
+    QtProperty* propSphereDircCtr = sphereCtrDircManager->addProperty("Sphere center direction");
+    sphereCtrDircManager->setEnumNames(propSphereDircCtr, QStringList() << "+Y" << "-Y");
+    sec_browser->setFactoryForManager(sphereCtrDircManager, sphereCtrDircFactory);
+    propCalibObj->addSubProperty(propSphereDircCtr);
 
     QtDoublePropertyManager* sphereRadiusManager = new QtDoublePropertyManager(sec_browser);
     QtDoubleSpinBoxFactory* sphereRadiusFactory = new QtDoubleSpinBoxFactory(sec_browser);
@@ -1143,35 +1178,49 @@ void MainWindow::sectionDispWidget(bool showWithSection)
         description->setText(QString::fromStdString(desc));
 
         std::string img_dir = m_section["Dataset"]["ImagesDir"];
-        imgs_dir_manager->setValue(propImgDir, QString::fromStdString(img_dir));
+        imgsDirManager->setValue(propImgDir, QString::fromStdString(img_dir));
 
         std::string rob_path = m_section["Dataset"]["RobPosesFile"];
-        rob_path_manager->setValue(propRobFilePath, QString::fromStdString(rob_path));
+        robPathManager->setValue(propRobFilePath, QString::fromStdString(rob_path));
+
+        int nbr_data = m_section["Dataset"]["NbrData"];
+        nbrDataManager->setValue(propNbrData, nbr_data);
 
         std::string calib_type = m_section["Config"]["CalibType"];
         if(calib_type == "EyeInHand")
-            type_manager->setValue(propCalibType, 0);
+            calibTypeManager->setValue(propCalibType, 0);
         else
-            type_manager->setValue(propCalibType, 1);
+            calibTypeManager->setValue(propCalibType, 1);
         
         std::string calib_algor = m_section["Config"]["CalibAlgor"];
         if(calib_algor == "Iterative")
-            algor_manager->setValue(propAlgor, 0);
+            algorManager->setValue(propAlgor, 0);
         else
-            algor_manager->setValue(propAlgor, 1);
+            algorManager->setValue(propAlgor, 1);
 
         std::string calib_obj = m_section["CalibObj"]["Name"];
         if(calib_obj == "Sphere"){
+            std::string dircCtr = m_section["CalibObj"]["SphCtrDirc"];
             ObjNameManager->setValue(propCalibObjName, 0);
             sphereRadiusManager->setValue(propCalibObjPara, m_section["CalibObj"]["Radius"]);
+            if (dircCtr == "+Y")
+                sphereCtrDircManager->setValue(propSphereDircCtr, 0);
+            else if (dircCtr == "-Y"){
+                sphereCtrDircManager->setValue(propSphereDircCtr, 1);
+            }
+            else {
+                std::cerr << "ERROR: Wrong sphere center direction in camera frame.\n";
+            }
         }
-        else if (calib_obj == "Block")
+        else if (calib_obj == "Block"){
             ObjNameManager->setValue(propCalibObjName, 1);
-        else if (calib_obj == "Board")
+        } 
+        else if (calib_obj == "Board"){
             ObjNameManager->setValue(propCalibObjName, 2);
-        else
+        }   
+        else{
             std::cerr << "ERROR: Wrong calibration objection name.\n";
-        
+        }
     }
 
     // save calib config to section 
@@ -1191,25 +1240,28 @@ void MainWindow::sectionDispWidget(bool showWithSection)
         };
 
         // section: Dataset
-        auto imgs_dir = imgs_dir_manager->value(propImgDir);
-        auto rob_pose_file = rob_path_manager->value(propRobFilePath);
+        auto imgs_dir = imgsDirManager->value(propImgDir);
+        auto nbr_data = nbrDataManager->value(propNbrData);
+        auto rob_pose_file = robPathManager->value(propRobFilePath);
         m_section["Dataset"] = {
+            {"NbrData", nbr_data},
             {"ImagesDir", imgs_dir.toStdString()},
             {"RobPosesFile", rob_pose_file.toStdString()}
         };
 
         // section: Config
-        auto id_algor = algor_manager->value(propAlgor);
-        auto id_type = type_manager->value(propCalibType);
+        auto id_algor = algorManager->value(propAlgor);
+        auto id_type = calibTypeManager->value(propCalibType);
         m_section["Config"] = {
-            {"CalibAlgor", algor_manager->enumNames(propAlgor).at(id_algor).toStdString()},
-            {"CalibType", type_manager->enumNames(propCalibType).at(id_type).toStdString()}
+            {"CalibAlgor", algorManager->enumNames(propAlgor).at(id_algor).toStdString()},
+            {"CalibType", calibTypeManager->enumNames(propCalibType).at(id_type).toStdString()}
         };
 
         // section: Calib objection
         auto id_calibObj = ObjNameManager->value(propCalibObjName);
         m_section["CalibObj"] = {
             {"Name", ObjNameManager->enumNames(propCalibObjName).at(id_calibObj).toStdString()},
+            {"SphCtrDirc", propSphereDircCtr->valueText().toStdString()},
             {"Radius", sphereRadiusManager->value(propCalibObjPara)}
         };
 
@@ -1269,7 +1321,6 @@ void MainWindow::savePerspective()
 
         m_dockManager->savePerspectives(Settings);
     }
-
 }
 
 void MainWindow::restorePerspective()
@@ -1301,6 +1352,4 @@ void MainWindow::restoreLayoutConfig()
 	this->restoreGeometry(Settings1.value("mainWindow/Geometry").toByteArray());
 	m_dockManager->restoreState(Settings1.value("mainWindow/DockingState").toByteArray());
 }
-
-
 

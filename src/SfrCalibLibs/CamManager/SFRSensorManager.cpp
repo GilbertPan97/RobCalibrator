@@ -46,8 +46,6 @@ void SFRSensorManager::initUI()
     ui->profileDisplay->setLayout(profileLayout);
     ui->pointsDisplay->setLayout(pointsLayout);
 
-
-
     propertyBrowser=new QtTreePropertyBrowser(this);
     QVBoxLayout* layout=new QVBoxLayout(this);
     layout->addWidget(propertyBrowser);
